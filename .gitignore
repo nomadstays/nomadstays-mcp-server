@@ -1,0 +1,51 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
+build/
+dist/
+*.tsbuildinfo
+
+# Azure publish profiles (contain credentials)
+publish_profiles.json
+*.PublishSettings
+
+# IDE / OS
+.vs/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Test and debug scripts
+test_*.mjs
+check_*.mjs
+debug_*.mjs
+verify_*.mjs
+find_*.mjs
+test-*.json
+test-*.mjs
+test-*.cjs
+sse-bridge.cjs
+test-bridge.cjs
+test_data/
+
+# Python test/evaluation scripts
+*.py
+collect_responses.py
+evaluate_agent.py
+setup_agent_testing.py
+test_agent.py
+
+# Internal docs
+STAGING_DEPLOYMENT_REPORT.md
+FIXES_APPLIED.md
+COMPATIBILITY_FIX_SUMMARY.md
+TEST_STAY_260.md
+
+# Azure deploy temp
+azure-deploy-temp/

@@ -1,0 +1,37 @@
+{
+  "name": "nomadstays-mcp25-dev",
+  "version": "0.1.0",
+  "description": "A Model Context Protocol server",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "nomadstays-mcp25-dev": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "start": "node httpShim.js",
+    "build": "tsc",
+    "postinstall": "echo 'Dependencies installed'"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "archiver": "^7.0.1",
+    "commander": "^14.0.2",
+    "dotenv": "^17.2.3",
+    "mssql": "^12.2.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.18.0",
+    "@types/express": "^5.0.6",
+    "@types/mssql": "^9.1.8",
+    "@types/node": "^20.11.24",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

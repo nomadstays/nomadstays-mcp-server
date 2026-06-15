@@ -1,0 +1,336 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NomadStays MCP API",
+    "description": "Access to NomadStays accommodation database with tools for searching stays by country, continent, location, lifestyle, and budget. Also provides availability checking and detailed stay information.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://dev-mcp.nomadstays.com",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "summary": "Health check endpoint",
+        "description": "Verify server is running",
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "timestamp": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp": {
+      "post": {
+        "operationId": "callMCPEndpoint",
+        "summary": "Call MCP protocol endpoint",
+        "description": "Direct MCP protocol access (for advanced use)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "jsonrpc": { "type": "string", "example": "2.0" },
+                  "id": { "type": "number" },
+                  "method": { "type": "string" },
+                  "params": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "MCP response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stays/country/{countrycode}": {
+      "get": {
+        "operationId": "getStaysByCountry",
+        "summary": "Get stays by country",
+        "description": "Search for accommodations by country using 2-letter country code (e.g., MA, US, FR) or full country name",
+        "parameters": [
+          {
+            "name": "countrycode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "2-letter country code (e.g., 'MA', 'US') or country name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of stays in the country",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stays/continent/{continent}": {
+      "get": {
+        "operationId": "getStaysByContinent",
+        "summary": "Get stays by continent",
+        "description": "Filter accommodations by continent (Europe, Asia, Africa, North America, South America, Oceania)",
+        "parameters": [
+          {
+            "name": "continent",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["Europe", "Asia", "Africa", "North America", "South America", "Oceania", "Antarctica"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of stays in the continent"
+          }
+        }
+      }
+    },
+    "/api/stays/location": {
+      "get": {
+        "operationId": "getStaysByLocation",
+        "summary": "Search stays by location",
+        "description": "Search for accommodations by city, state, or location type (e.g., 'beach', 'mountain', 'city center')",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Location query (city, state, or descriptive location)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of matching stays"
+          }
+        }
+      }
+    },
+    "/api/stays/lifestyle/{lifestyle}": {
+      "get": {
+        "operationId": "getStaysByLifestyle",
+        "summary": "Get stays by lifestyle",
+        "description": "Find accommodations by lifestyle category (nomad, adventure, wellness, cultural, luxury, etc.)",
+        "parameters": [
+          {
+            "name": "lifestyle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of stays matching lifestyle"
+          }
+        }
+      }
+    },
+    "/api/stays/budget": {
+      "get": {
+        "operationId": "searchStaysByBudget",
+        "summary": "Search stays by budget",
+        "description": "Find accommodations within a price range",
+        "parameters": [
+          {
+            "name": "minprice",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "description": "Minimum price per night"
+          },
+          {
+            "name": "maxprice",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "description": "Maximum price per night"
+          },
+          {
+            "name": "countrycode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional: Filter by country code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of stays within budget"
+          }
+        }
+      }
+    },
+    "/api/stays/{stayid}": {
+      "get": {
+        "operationId": "getStayByID",
+        "summary": "Get stay by ID",
+        "description": "Get detailed information about a specific stay including all rooms, amenities, and pricing",
+        "parameters": [
+          {
+            "name": "stayid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed stay information"
+          }
+        }
+      }
+    },
+    "/api/availability/check": {
+      "post": {
+        "operationId": "checkStayAvailability",
+        "summary": "Check stay availability",
+        "description": "Check if a stay is available for specific dates",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "stayid": {
+                    "type": "integer",
+                    "description": "Stay ID to check"
+                  },
+                  "checkin": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Check-in date (YYYY-MM-DD)"
+                  },
+                  "checkout": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Check-out date (YYYY-MM-DD)"
+                  }
+                },
+                "required": ["stayid", "checkin", "checkout"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Availability information"
+          }
+        }
+      }
+    },
+    "/api/availability/nearest": {
+      "post": {
+        "operationId": "findNearestAvailability",
+        "summary": "Find nearest availability",
+        "description": "If requested dates are unavailable, find the nearest available dates",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "stayid": {
+                    "type": "integer"
+                  },
+                  "checkin": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "checkout": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": ["stayid", "checkin", "checkout"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Nearest available dates"
+          }
+        }
+      }
+    },
+    "/api/lifestyles": {
+      "get": {
+        "operationId": "getAllLifestyles",
+        "summary": "Get all lifestyles",
+        "description": "List all available lifestyle categories",
+        "responses": {
+          "200": {
+            "description": "List of lifestyle categories"
+          }
+        }
+      }
+    },
+    "/api/amenities": {
+      "get": {
+        "operationId": "getAllAmenities",
+        "summary": "Get all amenities",
+        "description": "List all available amenities across all stays",
+        "responses": {
+          "200": {
+            "description": "List of amenities"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "nomadstays": {
+      "command": "node",
+      "args": ["C:\\Users\\YourUsername\\path\\to\\nomadstays-mcp25-live\\build\\index.js"],
+      "env": {
+        "NOMADSTAYS_DB_CONNECTION": "Server=tcp:myserver.database.windows.net,1433;Initial Catalog=NomadStays;Persist Security Info=False;User ID=admin;Password=YourPassword123!;Encrypt=True;Connection Timeout=30;"
+      }
+    }
+  }
+}
