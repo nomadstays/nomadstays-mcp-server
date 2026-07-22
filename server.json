@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.nomadstays/mcp-server",
-  "description": "Gives AI agents access to NomadStays accommodation data — search by country, continent, location, lifestyle, budget, amenities, and availability.",
+  "description": "AI agent access to NomadStays accommodation search, availability, and help center data.",
   "repository": {
     "url": "https://github.com/nomadstays/nomadstays-mcp-server",
     "source": "github"
