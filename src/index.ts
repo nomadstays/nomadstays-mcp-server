@@ -64,6 +64,7 @@ if (isHttpMode) {
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { 
   CallToolRequestSchema,
   ListResourcesRequestSchema,
@@ -731,6 +732,187 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  // ── Owner-scoped lookup tools (require NOMADSTAYS_MCP_AGENT_TOKEN) ────────
+  // Pair with the write tools below so an agent can show the host their current
+  // values before changing anything, rather than guessing or blanking fields.
+
+  if (request.params.name === "getMyStays") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getMyStays();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyStays failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getMyStayDetail") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'getMyStayDetail' requires 'stayId' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getStayDetail(String(stayId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyStayDetail failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getMyStayRooms") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'getMyStayRooms' requires 'stayId' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getRooms(String(stayId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyStayRooms failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getMyStayPackages") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'getMyStayPackages' requires 'stayId' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getPackages(String(stayId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyStayPackages failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getMyStayOrganisationalData") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'getMyStayOrganisationalData' requires 'stayId' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getStayOrganisational(String(stayId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyStayOrganisationalData failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getMyBusinessProfile") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getBusinessProfile();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyBusinessProfile failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  // ── Write tools (require NOMADSTAYS_MCP_AGENT_TOKEN) ──────────────────────
+
+  if (request.params.name === "updateStayDetail") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'updateStayDetail' requires 'stayId' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    const { title, description } = request.params.arguments ?? {};
+    try {
+      await mcpAgentClient.patchStayDetail(String(stayId), { title, description });
+      return CompatibilityHelper.formatToolResponse({ updated: true, stayId });
+    } catch (err: any) {
+      throw new Error(`updateStayDetail failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "createStayRoom") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'createStayRoom' requires 'stayId' argument");
+    const { roomTitle } = request.params.arguments ?? {};
+    if (!roomTitle) throw new Error("Tool 'createStayRoom' requires 'roomTitle' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    const { stayId: _s, ...body } = request.params.arguments as Record<string, unknown>;
+    try {
+      const result = await mcpAgentClient.createRoom(String(stayId), body);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`createStayRoom failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "updateStayRoom") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const roomId = request.params.arguments?.roomId ?? null;
+    if (!stayId) throw new Error("Tool 'updateStayRoom' requires 'stayId' argument");
+    if (!roomId) throw new Error("Tool 'updateStayRoom' requires 'roomId' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    const { stayId: _s, roomId: _r, ...body } = request.params.arguments as Record<string, unknown>;
+    try {
+      await mcpAgentClient.patchRoom(String(stayId), String(roomId), body);
+      return CompatibilityHelper.formatToolResponse({ updated: true, stayId, roomId });
+    } catch (err: any) {
+      throw new Error(`updateStayRoom failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "createStayPackage") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'createStayPackage' requires 'stayId' argument");
+    const { packageName } = request.params.arguments ?? {};
+    if (!packageName) throw new Error("Tool 'createStayPackage' requires 'packageName' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    const { stayId: _s, ...body } = request.params.arguments as Record<string, unknown>;
+    try {
+      const result = await mcpAgentClient.createPackage(String(stayId), body);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`createStayPackage failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "updateStayPackage") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const packageId = request.params.arguments?.packageId ?? null;
+    if (!stayId) throw new Error("Tool 'updateStayPackage' requires 'stayId' argument");
+    if (!packageId) throw new Error("Tool 'updateStayPackage' requires 'packageId' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    const { stayId: _s, packageId: _p, ...body } = request.params.arguments as Record<string, unknown>;
+    try {
+      await mcpAgentClient.patchPackage(String(stayId), String(packageId), body);
+      return CompatibilityHelper.formatToolResponse({ updated: true, stayId, packageId });
+    } catch (err: any) {
+      throw new Error(`updateStayPackage failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "updateStayOrganisationalData") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'updateStayOrganisationalData' requires 'stayId' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    const { stayId: _s, ...body } = request.params.arguments as Record<string, unknown>;
+    try {
+      await mcpAgentClient.patchStayOrganisational(String(stayId), body);
+      return CompatibilityHelper.formatToolResponse({ updated: true, stayId });
+    } catch (err: any) {
+      throw new Error(`updateStayOrganisationalData failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "updateHostBusinessProfile") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    const body = request.params.arguments as Record<string, unknown>;
+    try {
+      await mcpAgentClient.patchBusinessProfile(body);
+      return CompatibilityHelper.formatToolResponse({ updated: true });
+    } catch (err: any) {
+      throw new Error(`updateHostBusinessProfile failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   throw new Error("Unknown tool");
 });
 
@@ -1230,6 +1412,231 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["amenities"]
         }
+      },
+
+      {
+        name: "getMyStays",
+        description: "List all Stays owned by the account bound to the MCP agent token. Returns stayId, title, and listed status for each — use this to find a stayId before calling any other owner-scoped tool. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: "getMyStayDetail",
+        description: "Get the current title, description, and listed status for one of your Stays. Call this before updateStayDetail so the agent knows the current values and doesn't accidentally overwrite them. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "getMyStayRooms",
+        description: "List all rooms currently configured on one of your Stays, including bed setup, occupancy, and facilities. Call this before createStayRoom or updateStayRoom so the agent can show current values or find the right roomId. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "getMyStayPackages",
+        description: "List all pricing packages on one of your Stays, including their full price tiers (days, buy price, sell price, comparison price, listed status). Call this before createStayPackage or updateStayPackage — hosts often forget exactly what packages/pricing they've already set. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "getMyStayOrganisationalData",
+        description: "Get a Stay's organisational data: address, check-in/out policy, pets/children/parking, cancellation policy, tourism/land-registration numbers. Call this before updateStayOrganisationalData so the agent knows current values. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "getMyBusinessProfile",
+        description: "Get the host account's business profile: legal business name, VAT/business registration numbers, whether registered as a business entity. Does NOT include bank or tax-ID details — those are never exposed via MCP. Call this before updateHostBusinessProfile. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      },
+
+      {
+        name: "updateStayDetail",
+        description: "Update a Stay's title and/or description. Requires an MCP agent token (NOMADSTAYS_MCP_AGENT_TOKEN) scoped to the owning account. Only fields supplied are changed.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            title: { type: "string", description: "OPTIONAL: new title" },
+            description: { type: "string", description: "OPTIONAL: new description" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "createStayRoom",
+        description: "Create a new room on a Stay. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            roomTitle: { type: "string", description: "Room name/title" },
+            roomDescription: { type: "string", description: "OPTIONAL: room description" },
+            roomTypeFK: { type: "number", description: "OPTIONAL: room type id" },
+            beds: { type: "number", description: "OPTIONAL: number of beds" },
+            maxPerson: { type: "number", description: "OPTIONAL: max occupancy" },
+            mainBedSize: { type: "string", description: "OPTIONAL: main bed size" },
+            otherBedSize: { type: "string", description: "OPTIONAL: other bed size" },
+            roomFacilityFk: { type: "string", description: "OPTIONAL: CSV of room facility IDs" },
+            mcpRoomId: { type: "string", description: "OPTIONAL: external MCP room identifier to bind" }
+          },
+          required: ["stayId", "roomTitle"]
+        }
+      },
+      {
+        name: "updateStayRoom",
+        description: "Update an existing room on a Stay. Only fields supplied are changed. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            roomId: { type: "number", description: "The room's EntryID (tbStaysRoom)" },
+            roomTitle: { type: "string" },
+            roomDescription: { type: "string" },
+            roomTypeFK: { type: "number" },
+            beds: { type: "number" },
+            maxPerson: { type: "number" },
+            mainBedSize: { type: "string" },
+            otherBedSize: { type: "string" },
+            roomFacilityFk: { type: "string", description: "CSV of room facility IDs" },
+            mcpRoomId: { type: "string", description: "External MCP room identifier" }
+          },
+          required: ["stayId", "roomId"]
+        }
+      },
+      {
+        name: "createStayPackage",
+        description: "Create a new pricing package on a Stay, optionally with initial price tiers. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            packageName: { type: "string", description: "Package name" },
+            description: { type: "string", description: "OPTIONAL: package description" },
+            roomTypeFK: { type: "number", description: "OPTIONAL: room type id this package covers" },
+            currencyFK: { type: "number", description: "OPTIONAL: currency id (1=EUR, 2=USD, 3=GBP, 4=ZAR, 5=DKK)" },
+            maxPax: { type: "number", description: "OPTIONAL: max occupancy for this package" },
+            listed: { type: "boolean", description: "OPTIONAL: whether the package is publicly listed" },
+            prices: {
+              type: "array",
+              description: "OPTIONAL: initial price tiers. If supplied, replaces all price rows for the package.",
+              items: {
+                type: "object",
+                properties: {
+                  days: { type: "number", description: "Length-of-stay tier in days" },
+                  buyPrice: { type: "number", description: "Internal cost basis" },
+                  sellPrice: { type: "number", description: "Retail sell price" },
+                  comparisonSellPrice: { type: "number", description: "OPTIONAL: strike-through comparison price" },
+                  listed: { type: "boolean", description: "Whether this price tier is publicly listed" }
+                },
+                required: ["days", "buyPrice", "sellPrice", "listed"]
+              }
+            }
+          },
+          required: ["stayId", "packageName"]
+        }
+      },
+      {
+        name: "updateStayPackage",
+        description: "Update an existing pricing package on a Stay. Supplying 'prices' replaces ALL price rows for that package. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            packageId: { type: "number", description: "The package's EntryID (tbStayPackages)" },
+            packageName: { type: "string" },
+            description: { type: "string" },
+            roomTypeFK: { type: "number" },
+            currencyFK: { type: "number", description: "1=EUR, 2=USD, 3=GBP, 4=ZAR, 5=DKK" },
+            maxPax: { type: "number" },
+            listed: { type: "boolean" },
+            prices: {
+              type: "array",
+              description: "OPTIONAL: replaces ALL price rows for this package when supplied",
+              items: {
+                type: "object",
+                properties: {
+                  days: { type: "number" },
+                  buyPrice: { type: "number" },
+                  sellPrice: { type: "number" },
+                  comparisonSellPrice: { type: "number" },
+                  listed: { type: "boolean" }
+                },
+                required: ["days", "buyPrice", "sellPrice", "listed"]
+              }
+            }
+          },
+          required: ["stayId", "packageId"]
+        }
+      },
+      {
+        name: "updateStayOrganisationalData",
+        description: "Update a Stay's organisational data: address, check-in/out policy, pets/children/parking, cancellation policy, tourism/land-registration numbers. Only fields supplied are changed. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            address: { type: "string" },
+            city: { type: "string" },
+            state: { type: "string" },
+            postCode: { type: "string" },
+            country: { type: "string" },
+            checkInFrom: { type: "string" },
+            checkInTo: { type: "string" },
+            checkOutFrom: { type: "string" },
+            checkOutTo: { type: "string" },
+            earlyCheckIn: { type: "boolean" },
+            lateCheckout: { type: "boolean" },
+            petsAllowed: { type: "boolean" },
+            childrenAllowed: { type: "boolean" },
+            parking: { type: "boolean" },
+            cxPolicy: { type: "string", description: "Cancellation policy text" },
+            tourismNumber: { type: "string" },
+            landRegistrationNumber: { type: "string" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "updateHostBusinessProfile",
+        description: "Update the host account's business profile (legal business name, VAT/business registration numbers). Applies to the account owning the MCP agent token, not a specific stay. Only fields supplied are changed. Does NOT touch bank or tax-ID details — those are not MCP-writable.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            businessName: { type: "string" },
+            vatNumber: { type: "string" },
+            businessNumber: { type: "string" },
+            entityAccount: { type: "boolean", description: "Whether the host operates as a registered business entity" }
+          },
+          required: []
+        }
       }
     ]
   };
@@ -1311,552 +1718,34 @@ async function main() {
         app.get('/api/mcp/stats/tools', statsEndpoints.getToolStats);
         app.get('/api/mcp/stats/detailed', statsEndpoints.getDetailedStats);
 
-        // MCP Streamable HTTP endpoint - the modern transport
+        // MCP Streamable HTTP endpoint - the modern transport, backed by the SDK's own
+        // StreamableHTTPServerTransport rather than a hand-rolled JSON-RPC switch, so every
+        // tool registered via server.setRequestHandler (ListToolsRequestSchema /
+        // CallToolRequestSchema) is automatically dispatched here with no duplication.
+        //
+        // Stateless mode (sessionIdGenerator: undefined) requires a FRESH transport per
+        // request — reusing one instance across requests causes message ID collisions
+        // between callers, since there is no session to correlate them by.
         app.post('/mcp', async (req, res) => {
-            console.error('MCP StreamableHTTP request received:', req.method, req.url);
-            
             try {
-              // Set proper headers for streaming
-              res.setHeader('Content-Type', 'application/json');
-              res.setHeader('Cache-Control', 'no-cache');
-
-              // Handle the MCP protocol message
-              const request = req.body;
-              console.error('MCP Request:', JSON.stringify(request, null, 2));
-
-              // Validate JSON-RPC request
-              if (!request || typeof request !== 'object' || !request.method) {
-                return res.status(400).json({
-                  jsonrpc: '2.0',
-                  error: {
-                    code: -32600,
-                    message: 'Invalid Request'
-                  },
-                  id: request?.id || null
+                const transport = new StreamableHTTPServerTransport({
+                    sessionIdGenerator: undefined,
                 });
-              }
-
-              // Handle notifications/initialized (and any notification)
-              if (!('id' in request) && request.method === 'notifications/initialized') {
-                // Notification: do nothing, return 204 No Content
-                return res.status(204).end();
-              }
-
-              // Handle MCP protocol initialization
-              if (request.method === 'initialize') {
-                return res.json({
-                  jsonrpc: '2.0',
-                  result: {
-                    protocolVersion: '2024-11-05',
-                    capabilities: {
-                      tools: {},
-                      resources: {}
-                    },
-                    serverInfo: {
-                      name: 'nomadstays-mcp25-live',
-                      version: '0.1.0'
-                    }
-                  },
-                  id: request.id
-                });
-              }
-
-              // Handle other MCP methods
-              let result;
-
-              switch (request.method) {
-                    case 'tools/list': {
-                      const toolsList = [
-                        {
-                          name: "getStaysByWiFiSpeed",
-                          description: "Search for stays with minimum WiFi download speed (Mbps). Returns stays with WiFi speeds above the specified threshold.",
-                          inputSchema: {
-                            type: "object",
-                            properties: {
-                              minWiFiDownloadSpeed: {
-                                type: "number",
-                                description: "Minimum WiFi download speed in Mbps (default: 10)"
-                              },
-                              limit: {
-                                type: "number",
-                                description: "Maximum number of stays to return (default: 15)"
-                              }
-                            },
-                            required: ["minWiFiDownloadSpeed"]
-                          }
-                        },
-                            {
-                                name: "getStaysByCountry",
-                                description: "Search for nomad stays in a specific country by 2-letter country code or partial country name",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        countrycode: {
-                                            type: "string",
-                                            description: "2-letter ISO country code (e.g. 'ES', 'PT') OR partial country name"
-                                        },
-                                        limit: {
-                                            type: "number",
-                                            description: "Maximum number of stays to return (default: 15)"
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                name: "getStaysByContinent",
-                                description: "Search for nomad stays by continent",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        continent: {
-                                            type: "string",
-                                            description: "Continent name (e.g., 'Europe', 'Asia', 'Africa')"
-                                        },
-                                        limit: {
-                                            type: "number",
-                                            description: "Maximum number of stays to return (default: 15)"
-                                        }
-                                    },
-                                    required: ["continent"]
-                                }
-                            },
-                            {
-                                name: "getStayByID",
-                                description: "Get detailed information about a specific stay by its ID",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        id: {
-                                            type: "string",
-                                            description: "The unique identifier of the stay"
-                                        }
-                                    },
-                                    required: ["id"]
-                                }
-                            },
-                            {
-                                name: "getStaysByLocation",
-                                description: "Search for stays by location (city/region name)",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        location: {
-                                            type: "string",
-                                            description: "City or region name to search for"
-                                        },
-                                        limit: {
-                                            type: "number",
-                                            description: "Maximum number of stays to return (default: 15)"
-                                        }
-                                    },
-                                    required: ["location"]
-                                }
-                            },
-                            {
-                                name: "getStaysByLifestyle",
-                                description: "Search for stays by lifestyle/genre category",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        lifestyle: {
-                                            type: "string",
-                                            description: "Lifestyle category (e.g., 'Digital Nomad', 'Beach Life')"
-                                        },
-                                        limit: {
-                                            type: "number",
-                                            description: "Maximum number of stays to return (default: 15)"
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                name: "getStaysByBudget",
-                                description: "Search for stays within a budget and duration. Country is optional - searches globally if not specified.",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        countryCode: {
-                                            type: "string",
-                                            description: "2-letter country code or country name (OPTIONAL - omit to search all countries)"
-                                        },
-                                        durationDays: {
-                                            type: "number",
-                                            description: "Duration of stay in days (e.g., 30 for 1 month)"
-                                        },
-                                        maxPrice: {
-                                            type: "number",
-                                            description: "Maximum price for the entire duration"
-                                        },
-                                        currency: {
-                                            type: "string",
-                                            description: "Currency code (e.g., 'EUR', 'USD')"
-                                        },
-                                        checkInDate: {
-                                            type: "string",
-                                            description: "OPTIONAL: Check-in date. Can be a full date (e.g., '2026-05-15'), a month name (e.g., 'May' ? uses May 1st), or omit for today"
-                                        },
-                                        limit: {
-                                            type: "number",
-                                            description: "Maximum number of results (default: 15)"
-                                        }
-                                    },
-                                    required: ["durationDays", "maxPrice", "currency"]
-                                }
-                            },
-                            {
-                                name: "getStaysByAmenities",
-                                description: "Find stays that include specific amenities across stay- and room-level facilities. Supports 'any' or 'all' matching and optional WiFi speed filter.",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        amenities: {
-                                            type: "array",
-                                            items: { type: "string" },
-                                            description: "Array of amenity names to search for (e.g., ['WiFi', 'Air Conditioning', 'Pool'])."
-                                        },
-                                        matchType: {
-                                            type: "string",
-                                            enum: ["any", "all"],
-                                            description: "Match any amenity (default) or require all amenities"
-                                        },
-                                        minWifiSpeed: {
-                                            type: "number",
-                                            description: "Minimum WiFi download speed in Mbps (default: 0)"
-                                        },
-                                        limit: {
-                                            type: "number",
-                                            description: "Maximum number of results to return (default: 25)"
-                                        }
-                                    },
-                                    required: ["amenities"]
-                                }
-                            },
-                            {
-                              name: "getAllLifestyles",
-                              description: "Get all available lifestyle categories",
-                              inputSchema: {
-                                type: "object",
-                                properties: {}
-                              }
-                            },
-                            {
-                              name: "getAllAmenities",
-                              description: "List all possible amenities grouped into Stay vs Room (database-wide)",
-                              inputSchema: {
-                                type: "object",
-                                properties: {}
-                              }
-                            },
-                            {
-                                name: "checkStayAvailability",
-                                description: "Check if a specific stay is available for given check-in and check-out dates",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        stayId: {
-                                            type: "string",
-                                            description: "The unique identifier of the stay"
-                                        },
-                                        checkIn: {
-                                            type: "string",
-                                            description: "Check-in date in ISO format (YYYY-MM-DD)"
-                                        },
-                                        checkOut: {
-                                            type: "string",
-                                            description: "Check-out date in ISO format (YYYY-MM-DD)"
-                                        },
-                                        roomType: {
-                                            type: "string",
-                                            description: "Optional specific room type to check availability for"
-                                        }
-                                    },
-                                    required: ["stayId", "checkIn", "checkOut"]
-                                }
-                            },
-                            {
-                                name: "findNearestAvailability",
-                                description: "Find the nearest available dates when requested dates are not available",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        stayId: {
-                                            type: "string",
-                                            description: "The unique identifier of the stay"
-                                        },
-                                        preferredCheckIn: {
-                                            type: "string",
-                                            description: "Preferred check-in date in ISO format (YYYY-MM-DD)"
-                                        },
-                                        minLengthOfStay: {
-                                            type: "number",
-                                            description: "Minimum length of stay in days"
-                                        },
-                                        maxLengthOfStay: {
-                                            type: "number",
-                                            description: "Maximum length of stay in days (optional)"
-                                        },
-                                        searchWindowDays: {
-                                            type: "number",
-                                            description: "Number of days before and after preferred date to search (default: 90)"
-                                        }
-                                    },
-                                    required: ["stayId", "preferredCheckIn", "minLengthOfStay"]
-                                }
-                            },
-                            {
-                                name: "getAvailabilityByMonth",
-                                description: "Get all available booking windows in a specific month",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        stayId: {
-                                            type: "string",
-                                            description: "The unique identifier of the stay"
-                                        },
-                                        year: {
-                                            type: "number",
-                                            description: "Year (e.g., 2026)"
-                                        },
-                                        month: {
-                                            type: "number",
-                                            description: "Month number (1-12, where 1=January, 12=December)"
-                                        },
-                                        minLengthOfStay: {
-                                            type: "number",
-                                            description: "Minimum length of stay in days required"
-                                        }
-                                    },
-                                    required: ["stayId", "year", "month", "minLengthOfStay"]
-                                }
-                            },
-                            {
-                                name: "getRoomAvailability",
-                                description: "Check which specific rooms at a stay are available for given dates",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        stayId: {
-                                            type: "string",
-                                            description: "The unique identifier of the stay"
-                                        },
-                                        checkIn: {
-                                            type: "string",
-                                            description: "Check-in date in ISO format (YYYY-MM-DD)"
-                                        },
-                                        checkOut: {
-                                            type: "string",
-                                            description: "Check-out date in ISO format (YYYY-MM-DD)"
-                                        }
-                                    },
-                                    required: ["stayId", "checkIn", "checkOut"]
-                                }
-                            },
-                            {
-                                name: "getRoomAmenities",
-                                description: "Get comprehensive list of all facilities and amenities for a specific room",
-                                inputSchema: {
-                                    type: "object",
-                                    properties: {
-                                        roomId: {
-                                            type: "string",
-                                            description: "The unique identifier of the room"
-                                        }
-                                    },
-                                    required: ["roomId"]
-                                }
-                            }
-                        ];
-                        
-                        result = { tools: toolsList };
-                        break;
-                    }
-                    
-                    case 'tools/call': {
-                        const toolName = request.params?.name;
-                        const args = request.params?.arguments || {};
-                        
-                        const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-                        let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-                        connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-                        
-                        if (!connStr) {
-                            throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set");
-                        }
-                        
-                        let toolResult;
-                        
-                        switch (toolName) {
-                                    case 'getStaysByWiFiSpeed': {
-                                      const { getStaysByWiFiSpeed } = await import('./db/getStaysByWiFiSpeed.js');
-                                      const stays = await getStaysByWiFiSpeed(connStr, {
-                                        minWiFiDownloadSpeed: Number(args.minWiFiDownloadSpeed) || 10,
-                                        limit: Number(args.limit) || 15
-                                      });
-                                      toolResult = stays;
-                                      break;
-                                    }
-                            case 'getStaysByCountry': {
-                                const { getStaysByCountry } = await import('./db/getStaysByCountry.js');
-                                const stays = await getStaysByCountry(connStr, { 
-                                    country: args.countrycode ?? null, 
-                                    limit: Number(args.limit) || 15 
-                                });
-                                toolResult = stays;
-                                break;
-                            }
-                            case 'getStaysByContinent': {
-                                const { getStaysByContinent } = await import('./db/getStaysByContinent.js');
-                                const stays = await getStaysByContinent(connStr, { 
-                                    continent: args.continent, 
-                                    limit: Number(args.limit) || 15 
-                                });
-                                toolResult = stays;
-                                break;
-                            }
-                            case 'getStayByID': {
-                                const { getStayByID } = await import('./db/getStayByID.js');
-                                const stay = await getStayByID(connStr, args.id);
-                                toolResult = stay;
-                                break;
-                            }
-                            case 'getStaysByLocation': {
-                                const { getStaysByLocation } = await import('./db/getStaysByLocation.js');
-                                const stays = await getStaysByLocation(connStr, { 
-                                    location: args.location, 
-                                    limit: Number(args.limit) || 15 
-                                });
-                                toolResult = stays;
-                                break;
-                            }
-                            case 'getStaysByLifestyle': {
-                                const { getStaysByLifestyle } = await import('./db/getStaysByLifestyle.js');
-                                const stays = await getStaysByLifestyle(connStr, { 
-                                    lifestyle: args.lifestyle ?? null, 
-                                    limit: Number(args.limit) || 15 
-                                });
-                                toolResult = stays;
-                                break;
-                            }
-                            case 'getAllLifestyles': {
-                              const { getAllLifestyles } = await import('./db/getAllLifestyles.js');
-                              const lifestyles = await getAllLifestyles(connStr);
-                                toolResult = lifestyles;
-                                break;
-                            }
-                            case 'checkStayAvailability': {
-                                const { checkStayAvailability } = await import('./db/checkStayAvailability.js');
-                                const result = await checkStayAvailability(connStr, {
-                                    stayId: args.stayId,
-                                    checkIn: args.checkIn,
-                                    checkOut: args.checkOut,
-                                    roomType: args.roomType
-                                });
-                                toolResult = result;
-                                break;
-                            }
-                            case 'findNearestAvailability': {
-                                const { findNearestAvailability } = await import('./db/findNearestAvailability.js');
-                                const result = await findNearestAvailability(connStr, {
-                                    stayId: args.stayId,
-                                    preferredCheckIn: args.preferredCheckIn,
-                                    minLengthOfStay: Number(args.minLengthOfStay),
-                                    maxLengthOfStay: args.maxLengthOfStay ? Number(args.maxLengthOfStay) : undefined,
-                                    searchWindowDays: args.searchWindowDays ? Number(args.searchWindowDays) : undefined
-                                });
-                                toolResult = result;
-                                break;
-                            }
-                            case 'getAvailabilityByMonth': {
-                                const { getAvailabilityByMonth } = await import('./db/getAvailabilityByMonth.js');
-                                const result = await getAvailabilityByMonth(connStr, {
-                                    stayId: args.stayId,
-                                    year: Number(args.year),
-                                    month: Number(args.month),
-                                    minLengthOfStay: Number(args.minLengthOfStay)
-                                });
-                                toolResult = result;
-                                break;
-                            }
-                            case 'getRoomAvailability': {
-                                const { getRoomAvailability } = await import('./db/getRoomAvailability.js');
-                                const result = await getRoomAvailability(connStr, {
-                                    roomId: args.roomId,
-                                    checkIn: args.checkIn,
-                                    checkOut: args.checkOut
-                                });
-                                toolResult = result;
-                                break;
-                            }
-                            case 'getStaysByBudget': {
-                                const { getStaysByBudget } = await import('./db/getStaysByBudget.js');
-                                const stays = await getStaysByBudget(connStr, {
-                                    countryCode: args.countryCode ?? null,
-                                    durationDays: Number(args.durationDays),
-                                    maxPrice: Number(args.maxPrice),
-                                    currency: args.currency,
-                                    checkInDate: args.checkInDate ?? null,
-                                    limit: Number(args.limit) || 15
-                                });
-                                toolResult = stays;
-                                break;
-                            }
-                            case 'getAllAmenities': {
-                              const { getAllAmenities } = await import('./db/getAllAmenities.js');
-                              const res = await getAllAmenities(connStr);
-                              toolResult = res;
-                              break;
-                            }
-                            default:
-                                throw new Error(`Unknown tool: ${toolName}`);
-                        }
-                        
-                        result = {
-                            content: [
-                                {
-                                    type: "text",
-                                    text: JSON.stringify(toolResult, null, 2)
-                                }
-                            ]
-                        };
-                        break;
-                    }
-                    
-                    case 'resources/list': {
-                        result = { resources: [] };
-                        break;
-                    }
-                    
-                    default:
-                        return res.status(400).json({
-                            jsonrpc: '2.0',
-                            error: {
-                                code: -32601,
-                                message: 'Method not found'
-                            },
-                            id: request.id || null
-                        });
+                res.on('close', () => transport.close());
+                await server.connect(transport);
+                await transport.handleRequest(req, res, req.body);
+            } catch (err: any) {
+                console.error('StreamableHTTP request failed:', err?.stack ?? String(err));
+                if (!res.headersSent) {
+                    res.status(500).json({
+                        jsonrpc: '2.0',
+                        error: { code: -32603, message: 'Internal error', data: err?.message ?? String(err) },
+                        id: req.body?.id ?? null
+                    });
                 }
-                
-                // Return successful response
-                res.json({
-                    jsonrpc: '2.0',
-                    result: result,
-                    id: request.id
-                });
-                
-            } catch (error: any) {
-                console.error('MCP Error:', error);
-                res.status(500).json({
-                    jsonrpc: '2.0',
-                    error: {
-                        code: -32603,
-                        message: 'Internal error',
-                        data: error?.message || String(error)
-                    },
-                    id: req.body?.id || null
-                });
             }
         });
+        
         
         // Root endpoint - serve index.html
         app.get('/', (req, res) => {
