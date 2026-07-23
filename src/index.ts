@@ -1709,7 +1709,9 @@ async function main() {
       app.set('trust proxy', true);
         
         // JSON body parser middleware
-        app.use(express.json());
+        // 10mb accommodates uploadStayPhoto's base64 payloads: a 5MB image (the app's own
+        // max) becomes ~6.7MB once base64-encoded, plus JSON/field overhead.
+        app.use(express.json({ limit: '10mb' }));
         
         // Initialize request logger for tracking AI Agent visits
         const connectionString = process.env.NOMADSTAYS_DB_CONNECTION || '';
