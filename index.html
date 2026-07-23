@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nomad Stays MCP Server - API Documentation</title>
+    <link rel="icon" type="image/x-icon" href="https://www.nomadstays.com/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://www.nomadstays.com/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://www.nomadstays.com/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://www.nomadstays.com/favicon-16x16.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(321deg, #667eea4d 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .mcpcontainer {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .section h3 {
+            color: #764ba2;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-right: 0.5rem;
+        }
+
+        .get {
+            background: #61affe;
+            color: white;
+        }
+
+        .post {
+            background: #49cc90;
+            color: white;
+        }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+        }
+
+        .parameter {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .parameter-name {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .parameter-type {
+            color: #764ba2;
+            font-style: italic;
+        }
+
+        .required {
+            color: #dc3545;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .optional {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .example-box {
+            background: #e7f3ff;
+            border-left: 4px solid #61affe;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .quick-link {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .quick-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-link h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th,
+        td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .badge-mcp {
+            background: #764ba2;
+            color: white;
+        }
+
+        .badge-rest {
+            background: #61affe;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🏡 Nomad Stays MCP Server</h1>
+        <p>Find the perfect remote work accommodation worldwide</p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">API Version 0.6.0 | Base URL:
+            <code><a href="https://mcp.nomadstays.com" target="_blank" style="color: #fff; text-decoration: underline;">https://mcp.nomadstays.com</a></code></p>
+    </div>
+
+    <div class="mcpcontainer">
+        <div class="section">
+            <h2>📖 Overview</h2>
+            <p>The Nomad Stays MCP Server provides access to a curated database of remote-work-friendly accommodations
+                around the world. This API supports both the Model Context Protocol (MCP) for AI assistants and standard
+                REST endpoints for direct integration.</p>
+            <p style="margin-top: 0.75rem;"><strong>New:</strong> hosts can now issue an MCP agent token (see
+                <a href="https://www.nomadstays.com/siteadmin/mcp-tokens-admin" target="_blank">Token Management</a>)
+                so their own AI assistant can look up and update their Stay listings, rooms, pricing packages,
+                organisational data, business profile, and photos on their behalf. See the
+                <strong>🔐 Owner-Scoped Lookup Tools</strong> and <strong>✏️ Owner-Scoped Write Tools</strong> sections
+                below.</p>
+
+            <div class="quick-links">
+                <a href="#endpoints" class="quick-link">
+                    <h4>🔌 API Endpoints</h4>
+                    <p>Browse available REST endpoints</p>
+                </a>
+                <a href="#mcp" class="quick-link">
+                    <h4>🤖 MCP Protocol</h4>
+                    <p>Use with AI assistants like Claude</p>
+                </a>
+                <a href="#examples" class="quick-link">
+                    <h4>💡 Examples</h4>
+                    <p>See sample requests and responses</p>
+                </a>
+                <a href="#helpcenter" class="quick-link">
+                    <h4>🆘 Help Center</h4>
+                    <p>Access help articles and support via MCP tools</p>
+                </a>
+                <a href="#data-model" class="quick-link">
+                    <h4>📊 Data Model</h4>
+                    <p>Understand the stay object structure</p>
+                </a>
+                <a href="#supplier" class="quick-link">
+                    <h4>🏨 Supplier Integration</h4>
+                    <p>Push your availability to NomadStays in real time</p>
+                </a>
+            </div>
+        </div>
+
+        <div class="section" id="endpoints">
+            <h2>🔌 REST API Endpoints</h2>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/health</span>
+                <p style="margin-top: 0.5rem;">Health check endpoint to verify the server is running.</p>
+
+                <h3>Response</h3>
+                <div class="code-block">
+                    {
+                    "status": "healthy",
+                    "timestamp": "2025-01-15T10:30:00Z"
+                    }</div>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/stays</span>
+                <p style="margin-top: 0.5rem;">Retrieve a list of stays with optional filtering.</p>
+
+                <h3>Query Parameters</h3>
+                <div class="parameter">
+                    <span class="parameter-name">countrycode</span>
+                    <span class="parameter-type">(string)</span>
+                    <span class="optional">Optional</span>
+                    <p>ISO 3166-1 alpha-2 country code (e.g., PT, ES, TH, MX, CO)</p>
+                </div>
+
+                <div class="parameter">
+                    <span class="parameter-name">limit</span>
+                    <span class="parameter-type">(integer)</span>
+                    <span class="optional">Optional</span>
+                    <p>Maximum number of results to return (default: 10, max: 100)</p>
+                </div>
+
+                <h3>Example Request</h3>
+                <div class="code-block">
+                    GET https://mcp.nomadstays.com/api/stays?countrycode=PT&limit=5</div>
+
+                <h3>Example Response</h3>
+                <div class="code-block">
+                    {
+                    "stays": [
+                    {
+                    "id": "stay_001",
+                    "name": "Lisbon Co-living Hub",
+                    "description": "Modern co-living space in the heart of Lisbon",
+                    "country": "Portugal",
+                    "countryCode": "PT",
+                    "city": "Lisbon",
+                    "pricePerMonth": 850,
+                    "currency": "EUR",
+                    "amenities": ["high_speed_wifi", "dedicated_desk", "kitchen", "coworking_space"],
+                    "coordinates": {
+                    "latitude": 38.7223,
+                    "longitude": -9.1393
+                    },
+                    "images": ["https://example.com/image1.jpg"],
+                    "bookingUrl": "https://www.nomadstays.com/stays/001"
+                    }
+                    ],
+                    "count": 1,
+                    "filters": {
+                    "countryCode": "PT",
+                    "limit": 5
+                    }
+                    }</div>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/stays/{id}</span>
+                <p style="margin-top: 0.5rem;">Retrieve detailed information about a specific stay.</p>
+
+                <h3>Path Parameters</h3>
+                <div class="parameter">
+                    <span class="parameter-name">id</span>
+                    <span class="parameter-type">(string)</span>
+                    <span class="required">Required</span>
+                    <p>Unique identifier for the stay</p>
+                </div>
+
+                <h3>Example Request</h3>
+                <div class="code-block">
+                    GET https://mcp.nomadstays.com/api/stays/stay_001</div>
+
+                <h3>Example Response</h3>
+                <div class="code-block">
+                    {
+                    "id": "stay_001",
+                    "name": "Lisbon Co-living Hub",
+                    "description": "Modern co-living space in the heart of Lisbon with fast WiFi...",
+                    "longDescription": "Full detailed description with multiple paragraphs...",
+                    "country": "Portugal",
+                    "countryCode": "PT",
+                    "city": "Lisbon",
+                    "neighborhood": "Príncipe Real",
+                    "pricePerMonth": 850,
+                    "currency": "EUR",
+                    "amenities": ["high_speed_wifi", "dedicated_desk", "kitchen", "coworking_space"],
+                    "wifiSpeed": 200,
+                    "coordinates": {
+                    "latitude": 38.7223,
+                    "longitude": -9.1393
+                    },
+                    "images": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
+                    "bookingUrl": "https://www.nomadstays.com/stays/001",
+                    "reviews": {
+                    "average": 4.5,
+                    "count": 42
+                    }
+                    }</div>
+            </div>
+        </div>
+
+        <div class="section" id="mcp">
+            <h2>🤖 Model Context Protocol (MCP)</h2>
+            <p>This server implements the MCP specification, allowing AI assistants to discover and use stays data
+                naturally in conversation. <strong>Now includes Help Center tools for searching and retrieving support articles directly via MCP.</strong></p>
+            <div
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0;">
+                <h3 style="color: white; margin: 0 0 1rem 0;">🚀 Quick Setup for Claude</h3>
+                <p style="margin-bottom: 1rem;">Connect this server to Claude in just 2 steps:</p>
+
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <strong>Step 1:</strong> Open your Claude configuration file:
+                    <ul style="margin: 0.5rem 0 0 1.5rem;">
+                        <li><strong>MacOS:</strong> <code
+                                style="background: rgba(0,0,0,0.2); padding: 0.2rem 0.5rem; border-radius: 3px;">~/Library/Application Support/Claude/claude_desktop_config.json</code>
+                        </li>
+                        <li><strong>Windows:</strong> <code
+                                style="background: rgba(0,0,0,0.2); padding: 0.2rem 0.5rem; border-radius: 3px;">%APPDATA%\Claude\claude_desktop_config.json</code>
+                        </li>
+                    </ul>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 4px;">
+                    <strong>Step 2:</strong> Add this configuration:
+                    <div
+                        style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 4px; margin-top: 0.5rem; font-family: 'Courier New', monospace; font-size: 0.9rem;">
+                {
+                    "mcpServers": {
+                    "nomadstays": { 
+                        "command": 
+                        "npx", 
+                        "args": [ "mcp-remote", 
+                            "https://mcp.nomadstays.com/mcp", 
+                            "--transport", 
+                            "http-first"
+                            ]  
+                        }
+                    }
+                }
+            </div>
+        </div>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">After adding, restart Claude. You can then ask:
+            <em>"Find me remote work stays in Portugal"</em></p>
+    </div>
+
+            <h3>For Claude.ai Web Users</h3>
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                <ol style="margin-left: 1.5rem;">
+                    <li>Go to <strong>Settings → Features → Model Context Protocol</strong></li>
+                    <li>Click <strong>"Add Server"</strong></li>
+                    <li>Enter server URL: <code><a href="https://mcp.nomadstays.com/mcp" target="_blank" style="color: #667eea; text-decoration: underline;">https://mcp.nomadstays.com/mcp</a></code></li>
+                    <li>Save and start using it in conversations!</li>
+                </ol>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/</span>
+                <span class="badge badge-mcp">MCP Protocol</span>
+                <p style="margin-top: 0.5rem;">MCP protocol endpoint for AI assistant integration.</p>
+
+                <h3>Integration</h3>
+                <p>To use this server with Claude or other MCP-compatible assistants, configure your MCP client with:
+                </p>
+
+                <div class="code-block">
+                    {
+                    "mcpServers": {
+                    "nomadstays": {
+                    "url": "https://mcp.nomadstays.com/mcp"
+                    }
+                    }
+                    }</div>
+
+                <h3>Available Tools</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tool Name</th>
+                            <th>Description</th>
+                            <th>Parameters</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">🆘 Help Center Tools</td>
+                        </tr>
+                        <tr>
+                            <td><code>searchHelpCenter</code></td>
+                            <td>Search help articles by keyword or question</td>
+                            <td>query (string), category (optional string), limit (optional number)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getHelpCenterArticle</code></td>
+                            <td>Retrieve a specific help article by ID</td>
+                            <td>id (string)</td>
+                        </tr>
+                        <tr>
+                            <td><code>listHelpCenterCategories</code></td>
+                            <td>List all available help center categories</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">🔍 Search & Filter Tools</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStaysByCountry</code></td>
+                            <td>Search stays by 2-letter country code or partial country name</td>
+                            <td>countrycode (string), limit (number)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStaysByContinent</code></td>
+                            <td>Filter stays by continent (Europe, Asia, Africa, etc.)</td>
+                            <td>continent (string), limit (number)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStaysByLocation</code></td>
+                            <td>Search across City, State, location name, country, and description</td>
+                            <td>location (string), limit (number)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStaysByLifestyle</code></td>
+                            <td>Find stays by lifestyle category</td>
+                            <td>lifestyle (string), limit (number)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStaysByBudget</code></td>
+                            <td>Search stays within budget and duration with FX conversion</td>
+                            <td>durationDays, maxPrice, currency, countryCode (optional), checkInDate (optional), limit (optional)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStaysByAmenities</code></td>
+                            <td>Search stays by amenities with fuzzy matching</td>
+                            <td>amenities (array), matchType (optional), minWifiSpeed (optional), limit (optional)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStaysByWiFiSpeed</code></td>
+                            <td>Find all stays with WiFi download speed greater than 10Mbps.</td>
+                            <td>minWiFiDownloadSpeed (number), limit (number)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStayByID</code></td>
+                            <td>Get detailed information about a specific stay</td>
+                            <td>id (number)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">📅 Availability & Booking Tools</td>
+                        </tr>
+                        <tr>
+                            <td><code>checkStayAvailability</code></td>
+                            <td>Check room availability for specific dates</td>
+                            <td>stayId, checkIn, checkOut, roomType (optional)</td>
+                        </tr>
+                        <tr>
+                            <td><code>findNearestAvailability</code></td>
+                            <td>Find nearest available dates near preferred check-in</td>
+                            <td>stayId, preferredCheckIn, minLengthOfStay, maxLengthOfStay (optional), searchWindowDays (optional)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getAvailabilityByMonth</code></td>
+                            <td>Get availability calendar for a specific month</td>
+                            <td>stayId, year, month, minLengthOfStay</td>
+                        </tr>
+                        <tr>
+                            <td><code>getRoomAvailability</code></td>
+                            <td>Check availability for a specific room</td>
+                            <td>roomId, checkIn, checkOut</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">📚 Reference & Metadata Tools</td>
+                        </tr>
+                        <tr>
+                            <td><code>getAllLifestyles</code></td>
+                            <td>Retrieve all available lifestyle categories</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getAllAmenities</code></td>
+                            <td>Retrieve all available amenities in the system</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getRoomAmenities</code></td>
+                            <td>Get amenities for a specific room</td>
+                            <td>roomId</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">🔐 Owner-Scoped Lookup Tools <span style="font-weight: normal; font-size: 0.85rem; color: #6c757d;">(require an MCP agent token)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>getMyStays</code></td>
+                            <td>List all Stays owned by the account bound to the MCP agent token</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getMyStayDetail</code></td>
+                            <td>Get a Stay's current title, description, and listed status</td>
+                            <td>stayId</td>
+                        </tr>
+                        <tr>
+                            <td><code>getMyStayRooms</code></td>
+                            <td>List all rooms configured on a Stay</td>
+                            <td>stayId</td>
+                        </tr>
+                        <tr>
+                            <td><code>getMyStayPackages</code></td>
+                            <td>List all pricing packages and price tiers on a Stay</td>
+                            <td>stayId</td>
+                        </tr>
+                        <tr>
+                            <td><code>getMyStayOrganisationalData</code></td>
+                            <td>Get a Stay's address, check-in/out policy, and cancellation policy</td>
+                            <td>stayId</td>
+                        </tr>
+                        <tr>
+                            <td><code>getMyBusinessProfile</code></td>
+                            <td>Get the host account's business profile (legal name, VAT/registration numbers)</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">✏️ Owner-Scoped Write Tools <span style="font-weight: normal; font-size: 0.85rem; color: #6c757d;">(require an MCP agent token)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>updateStayDetail</code></td>
+                            <td>Update a Stay's title and/or description</td>
+                            <td>stayId, title (optional), description (optional)</td>
+                        </tr>
+                        <tr>
+                            <td><code>createStayRoom</code></td>
+                            <td>Create a new room on a Stay</td>
+                            <td>stayId, roomTitle, roomDescription (optional), beds (optional), maxPerson (optional), and more</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateStayRoom</code></td>
+                            <td>Update an existing room on a Stay</td>
+                            <td>stayId, roomId, plus any room fields to change</td>
+                        </tr>
+                        <tr>
+                            <td><code>createStayPackage</code></td>
+                            <td>Create a new pricing package on a Stay, optionally with initial price tiers</td>
+                            <td>stayId, packageName, prices (optional array), and more</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateStayPackage</code></td>
+                            <td>Update a pricing package. Supplying prices replaces ALL price rows for that package</td>
+                            <td>stayId, packageId, plus any package/price fields to change</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateStayOrganisationalData</code></td>
+                            <td>Update a Stay's address, check-in/out policy, pets/children/parking, cancellation policy</td>
+                            <td>stayId, plus any organisational fields to change</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateHostBusinessProfile</code></td>
+                            <td>Update the host account's business profile. Never touches bank or tax-ID details</td>
+                            <td>businessName, vatNumber, businessNumber, entityAccount — all optional</td>
+                        </tr>
+                        <tr>
+                            <td><code>uploadStayPhoto</code></td>
+                            <td>Upload a photo to a Stay's listing, main, workspace, host, or room photo area. Supply a public https:// URL <em>or</em> base64-encoded bytes. Every photo is validated for JPEG format, size, minimum resolution (1920×1080 landscape, or 1080×1920 portrait for the host area) and is re-encoded server-side before storage</td>
+                            <td>stayId, area, url or base64, roomId (required when area is "room")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section" id="data-model">
+            <h2>📊 Data Model</h2>
+
+            <h3>Stay Object</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>string</td>
+                        <td>Unique identifier for the stay</td>
+                    </tr>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td>string</td>
+                        <td>Name of the accommodation</td>
+                    </tr>
+                    <tr>
+                        <td><code>description</code></td>
+                        <td>string</td>
+                        <td>Short description of the stay</td>
+                    </tr>
+                    <tr>
+                        <td><code>country</code></td>
+                        <td>string</td>
+                        <td>Full country name</td>
+                    </tr>
+                    <tr>
+                        <td><code>countryCode</code></td>
+                        <td>string</td>
+                        <td>ISO 3166-1 alpha-2 country code</td>
+                    </tr>
+                    <tr>
+                        <td><code>city</code></td>
+                        <td>string</td>
+                        <td>City name</td>
+                    </tr>
+                    <tr>
+                        <td><code>priceRange</code></td>
+                        <td>string</td>
+                        <td>Weekly price range (e.g., "From EUR 250 per week")</td>
+                    </tr>
+                    <tr>
+                        <td><code>priceCurrency</code></td>
+                        <td>string</td>
+                        <td>Currency code (e.g., EUR, USD)</td>
+                    </tr>
+                    <tr>
+                        <td><code>amenities</code></td>
+                        <td>array</td>
+                        <td>List of available amenities</td>
+                    </tr>
+                    <tr>
+                        <td><code>WiFiDownloadSpeed</code></td>
+                        <td>number</td>
+                        <td>WiFi download speed in Mbps (optional)</td>
+                    </tr>
+                    <tr>
+                        <td><code>WiFiUploadSpeed</code></td>
+                        <td>number</td>
+                        <td>WiFi upload speed in Mbps (optional)</td>
+                    </tr>
+                    <tr>
+                        <td><code>location_name</code></td>
+                        <td>string</td>
+                        <td>Location name from Location table</td>
+                    </tr>
+                    <tr>
+                        <td><code>location_country</code></td>
+                        <td>string</td>
+                        <td>Location country from Location table</td>
+                    </tr>
+                    <tr>
+                        <td><code>PetsAllowed</code></td>
+                        <td>boolean</td>
+                        <td>Whether pets are allowed</td>
+                    </tr>
+                    <tr>
+                        <td><code>coordinates</code></td>
+                        <td>object</td>
+                        <td>GeoLat and GeoLng coordinates</td>
+                    </tr>
+                    <tr>
+                        <td><code>bookingUrl</code></td>
+                        <td>string</td>
+                        <td>URL to book the stay</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Common Amenities</h3>
+            <p>Standard amenity identifiers used in the API:</p>
+            <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                <li><code>high_speed_wifi</code> - High-speed internet connection</li>
+                <li><code>dedicated_desk</code> - Dedicated workspace</li>
+                <li><code>kitchen</code> - Full kitchen access</li>
+                <li><code>coworking_space</code> - On-site coworking space</li>
+                <li><code>gym</code> - Fitness facilities</li>
+                <li><code>pool</code> - Swimming pool</li>
+                <li><code>parking</code> - Parking available</li>
+                <li><code>pet_friendly</code> - Pets allowed</li>
+            </ul>
+        </div>
+
+        <div class="section" id="examples">
+            <h2>💡 Usage Examples</h2>
+
+            <div class="example-box">
+                <h3>Find stays in Portugal</h3>
+                <div class="code-block">
+                    curl "https://mcp.nomadstays.com/api/stays?countrycode=PT&limit=10"</div>
+            </div>
+
+            <div class="example-box">
+                <h3>Search the Help Center for WiFi questions</h3>
+                <div class="code-block">
+                    # Using MCP tool: searchHelpCenter
+                    # Example: Find help articles about WiFi
+                    {
+                        "tool": "searchHelpCenter",
+                        "parameters": {
+                            "query": "WiFi"
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h3>Find stays in Europe</h3>
+                <div class="code-block">
+                    # Using MCP tool: getStaysByContinent
+                    # Searches by continent name</div>
+            </div>
+
+            <div class="example-box">
+                <h3>Find stays in Paris or near beaches</h3>
+                <div class="code-block">
+                    # Using MCP tool: getStaysByLocation
+                    # Searches across city, state, location name, and descriptions</div>
+            </div>
+
+            <div class="example-box">
+                <h3>Get all stays (no filter)</h3>
+                <div class="code-block">
+                    curl "https://mcp.nomadstays.com/api/stays?limit=50"</div>
+            </div>
+
+            <div class="example-box">
+                <h3>Get specific stay details</h3>
+                <div class="code-block">
+                    curl "https://mcp.nomadstays.com/api/stays/stay_001"</div>
+            </div>
+
+            <div class="example-box">
+                <h3>Using with Claude (MCP)</h3>
+                <p style="margin-bottom: 0.5rem;">Once configured, simply ask Claude naturally:</p>
+                <div style="background: white; padding: 1rem; border-radius: 4px; font-style: italic; margin-bottom: 0.5rem;">
+                    "Can you help me find remote work accommodations in Thailand?"
+                </div>
+                <div style="background: white; padding: 1rem; border-radius: 4px; font-style: italic; margin-bottom: 0.5rem;">
+                    "Show me stays in Paris with good WiFi"
+                </div>
+                <div style="background: white; padding: 1rem; border-radius: 4px; font-style: italic;">
+                    "I want to stay near a beach in Europe"
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+        <div class="section" id="helpcenter">
+            <h2>🆘 Help Center Integration</h2>
+            <p>The MCP server now provides direct access to the Nomad Stays Help Center. You can search for help articles, retrieve specific articles by ID, and list available categories using the new MCP tools. This enables AI assistants and users to get support and answers to common questions programmatically.</p>
+            <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                <li>Use <code>searchHelpCenter</code> to find articles by keyword or question.</li>
+                <li>Use <code>getHelpCenterArticle</code> to fetch a specific article by its ID.</li>
+                <li>Use <code>listHelpCenterCategories</code> to browse available help topics.</li>
+            </ul>
+            <p>For manual browsing, visit the <a href="https://help.nomadstays.com/" target="_blank">Nomad Stays Help Center</a>.</p>
+        </div>
+            <h2>🌍 Supported Countries</h2>
+            <p>Currently available country codes (examples):</p>
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; margin-top: 1rem;">
+                <div class="parameter">PT - Portugal</div>
+                <div class="parameter">ES - Spain</div>
+                <div class="parameter">TH - Thailand</div>
+                <div class="parameter">MX - Mexico</div>
+                <div class="parameter">CO - Colombia</div>
+                <div class="parameter">ID - Indonesia</div>
+                <div class="parameter">GR - Greece</div>
+                <div class="parameter">IT - Italy</div>
+            </div>
+            <p style="margin-top: 1rem; font-style: italic; color: #6c757d;">Note: Use the API to discover the complete
+                list of available countries.</p>
+        </div>
+
+        <div class="section" id="supplier">
+            <h2>🏨 Supplier / PMS Integration</h2>
+            <p>If you operate a property management system (PMS) or channel manager, you can sync your availability
+                calendar directly with NomadStays. Two integration modes are available:</p>
+
+            <h3 style="margin-top:1.5rem;">Option 1 — MCP Server (Pull)</h3>
+            <p>Run your own MCP server that exposes a <code>get_allocation</code> tool. NomadStays polls it hourly and
+                writes the returned availability into our booking system automatically.</p>
+            <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                <li>Expose your server over HTTPS (Streamable HTTP <code>POST /mcp</code> preferred)</li>
+                <li>Implement the <code>get_allocation</code> tool — takes <code>property_id</code>, <code>start_date</code>, <code>end_date</code></li>
+                <li>Return a <code>ranges</code> array with only reduced-allocation date periods</li>
+                <li>Secure with a Bearer token — NomadStays sends <code>Authorization: Bearer &lt;key&gt;</code> on every request</li>
+            </ul>
+
+            <h3 style="margin-top:1.5rem;">Option 2 — Webhook Push <span style="background:#28a745;color:#fff;font-size:0.75rem;padding:2px 8px;border-radius:4px;vertical-align:middle;margin-left:6px;">Recommended</span></h3>
+            <p>Push availability changes to NomadStays the moment they occur — no waiting for the next poll cycle.
+                When webhook push is enabled, NomadStays reduces polling to a once-daily safety check.</p>
+
+            <div class="endpoint" style="margin-top:1rem;">
+                <span class="method" style="background:#28a745;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold;font-family:monospace;">POST</span>
+                <span class="endpoint-url">/api/mcp/availability-push/{stayId}</span>
+                <span style="margin-left:1rem;color:#6c757d;font-size:0.9rem;">Base: https://www.nomadstays.com</span>
+            </div>
+
+            <h4 style="margin-top:1rem;">Authentication</h4>
+            <p>Sign every request with <strong>HMAC-SHA256</strong> using the shared secret NomadStays provisions during onboarding:</p>
+            <pre style="background:#f8f9fa;padding:1rem;border-radius:4px;overflow-x:auto;"><code>X-NomadStays-Signature: sha256=&lt;lowercase-hex&gt;
+
+# Python example
+import hmac, hashlib
+sig = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+</code></pre>
+
+            <h4 style="margin-top:1rem;">Payload</h4>
+            <pre style="background:#f8f9fa;padding:1rem;border-radius:4px;overflow-x:auto;"><code>{
+  "room_id": "your-room-identifier",
+  "ranges": [
+    { "start_date": "2026-07-10", "end_date": "2026-07-15", "allocation": 0 },
+    { "start_date": "2026-08-01", "end_date": "2026-08-05", "allocation": 1 }
+  ]
+}</code></pre>
+            <p style="margin-top:0.5rem; font-size:0.9rem; color:#6c757d;">Only include date ranges where availability is <em>reduced</em> from normal. Send <code>"ranges": []</code> to clear all blocks.</p>
+
+            <h4 style="margin-top:1rem;">Response Codes</h4>
+            <table style="width:100%;border-collapse:collapse;margin-top:0.5rem;">
+                <tr style="background:#f8f9fa;"><th style="padding:0.5rem;text-align:left;border:1px solid #dee2e6;">Status</th><th style="padding:0.5rem;text-align:left;border:1px solid #dee2e6;">Meaning</th></tr>
+                <tr><td style="padding:0.5rem;border:1px solid #dee2e6;"><code>200 OK</code></td><td style="padding:0.5rem;border:1px solid #dee2e6;">Accepted — <code>{"received": true, "reductions": N}</code></td></tr>
+                <tr><td style="padding:0.5rem;border:1px solid #dee2e6;"><code>401</code></td><td style="padding:0.5rem;border:1px solid #dee2e6;">Missing or incorrect signature</td></tr>
+                <tr><td style="padding:0.5rem;border:1px solid #dee2e6;"><code>404</code></td><td style="padding:0.5rem;border:1px solid #dee2e6;">Stay or room not found</td></tr>
+            </table>
+
+            <p style="margin-top:1.5rem;">For the full integration specification including code examples in Python and Node.js,
+                contact <a href="mailto:tech@nomadstays.com">tech@nomadstays.com</a> to begin onboarding.</p>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Rate Limits & Best Practices</h2>
+            <ul style="margin-left: 2rem;">
+                <li>Rate limit: 100 requests per minute per IP</li>
+                <li>Use appropriate limit parameters to avoid over-fetching</li>
+                <li>Cache responses when possible to reduce API calls</li>
+                <li>Always check the health endpoint before making bulk requests</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🆘 Support</h2>
+            <p>For questions, issues, or feature requests:</p>
+            <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                <li>Contact: <a href="https://www.nomadstays.com/contact-us" target="_blank">Contact Page</a></li>
+                <!-- <li>Documentation: https://docs.nomadstays.com</li>
+                <li>GitHub: https://github.com/nomadstays/mcp-server</li> -->
+            </ul>
+        </div>
+    </div>
+
+    <div style="text-align: center; padding: 2rem; color: #6c757d;">
+        <p>Nomad Stays MCP Server v0.6.0 | Made for digital nomads and remote workers 🌎</p>
+    </div>
+</body>
+
+</html>
