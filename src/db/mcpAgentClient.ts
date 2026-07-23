@@ -69,4 +69,6 @@ export const mcpAgentClient = {
 
   getBusinessProfile: () => call("GET", `/profile/business`),
   patchBusinessProfile: (body: unknown) => call("PATCH", `/profile/business`, body),
+
+  uploadPhoto: (stayId: string | number, body: unknown) => call("POST", `/stays/${stayId}/photos`, body),
 };

@@ -913,6 +913,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "uploadStayPhoto") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const area = request.params.arguments?.area ?? null;
+    const url = request.params.arguments?.url ?? null;
+    const base64 = request.params.arguments?.base64 ?? null;
+    if (!stayId) throw new Error("Tool 'uploadStayPhoto' requires 'stayId' argument");
+    if (!area) throw new Error("Tool 'uploadStayPhoto' requires 'area' argument (listing, main, workspace, host, or room)");
+    if (!url && !base64) throw new Error("Tool 'uploadStayPhoto' requires either 'url' or 'base64'");
+    if (url && base64) throw new Error("Tool 'uploadStayPhoto' accepts only one of 'url' or 'base64', not both");
+    if (area === 'room' && !request.params.arguments?.roomId) {
+      throw new Error("Tool 'uploadStayPhoto' requires 'roomId' when area is 'room' (call getMyStayRooms to find it)");
+    }
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    const { stayId: _s, ...body } = request.params.arguments as Record<string, unknown>;
+    try {
+      const result = await mcpAgentClient.uploadPhoto(String(stayId), body);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`uploadStayPhoto failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   throw new Error("Unknown tool");
 });
 
@@ -1636,6 +1659,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             entityAccount: { type: "boolean", description: "Whether the host operates as a registered business entity" }
           },
           required: []
+        }
+      },
+
+      {
+        name: "uploadStayPhoto",
+        description: "Upload a photo to one of your Stay's photo areas. Supply EXACTLY ONE of 'url' (a public https:// link, e.g. a Google Drive or Dropbox share link — the server downloads it) or 'base64' (the raw image bytes, base64-encoded — use this when you already have the image data in hand, e.g. a user attached a photo in the conversation, and have nowhere public to host it first). The photo is validated against the same minimum specs as a manual upload: JPEG only, under 5MB, and a minimum resolution that depends on area. Most areas require at least 1920x1080 landscape; 'host' requires at least 1080x1920 PORTRAIT — a landscape photo will be rejected for that area. Every upload is also fully re-encoded server-side (stripping metadata and anything that isn't genuine image data) before storage. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" },
+            area: {
+              type: "string",
+              enum: ["listing", "main", "workspace", "host", "room"],
+              description:
+                "Which photo area this belongs to:\n" +
+                "- 'listing': general Stay gallery photos (multiple allowed, min 1920x1080 landscape)\n" +
+                "- 'main': the single hero/cover photo shown first for the Stay (min 1920x1080 landscape, replaces any existing main photo)\n" +
+                "- 'workspace': coworking/workspace photos for the whole Stay (multiple allowed, min 1920x1080 landscape)\n" +
+                "- 'host': a photo of the HOST/CONTACT PERSON, not the property — must be PORTRAIT orientation, min 1080x1920 (replaces any existing host photo)\n" +
+                "- 'room': photos for one specific room — requires roomId (multiple allowed, min 1920x1080 landscape)"
+            },
+            url: { type: "string", description: "A public https:// URL the server can download the image from (e.g. a Google Drive or Dropbox share link). Supply this OR base64, not both." },
+            base64: { type: "string", description: "Base64-encoded JPEG image bytes (a data:image/jpeg;base64,... URI prefix is also accepted and stripped automatically). Supply this OR url, not both. Under ~6.7MB encoded (5MB image)." },
+            roomId: { type: "number", description: "Required when area is 'room' — the room's EntryID (use getMyStayRooms to find it). Ignored for other areas." }
+          },
+          required: ["stayId", "area"]
         }
       }
     ]
