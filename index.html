@@ -590,9 +590,69 @@
                             <td>stayId</td>
                         </tr>
                         <tr>
+                            <td><code>getMyStayContacts</code></td>
+                            <td>Get a Stay's public-facing contact details</td>
+                            <td>stayId</td>
+                        </tr>
+                        <tr>
+                            <td><code>getMyStayFacilities</code></td>
+                            <td>Get a Stay's facility checkboxes for a given facility group</td>
+                            <td>stayId, group</td>
+                        </tr>
+                        <tr>
+                            <td><code>getMyStayPhotos</code></td>
+                            <td>List a Stay's photos by area (listing, main, workspace, host)</td>
+                            <td>stayId</td>
+                        </tr>
+                        <tr>
                             <td><code>getMyBusinessProfile</code></td>
                             <td>Get the Trusted Stay Partner account's business profile (legal name, VAT/registration numbers)</td>
                             <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getRoomTypeOptions</code></td>
+                            <td>List valid room types for a Stay — boutique Stays get Boutique1–Boutique6 only, standard Stays get ordinary room types</td>
+                            <td>stayId</td>
+                        </tr>
+                        <tr>
+                            <td><code>getRoomFacilityOptions</code></td>
+                            <td>List all room-level facility options</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getCurrencyOptions</code></td>
+                            <td>List valid currencies for package pricing</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getBusinessModelOptions</code></td>
+                            <td>List valid values for a Stay's business model — read-only (not editable via MCP or the host UI itself), but the value it holds determines the sellPrice formula and whether advertisingEndpoint applies to packages</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getFacilityGroups</code></td>
+                            <td>List all facility groups a Stay's facilities are organised into</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStayTypeOptions</code></td>
+                            <td>List valid values for a Stay's main accommodation type</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getCountryOptions</code></td>
+                            <td>List valid countries, with names and 2-letter codes</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getCancellationPolicyOptions</code></td>
+                            <td>List valid cancellation policy values</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getAdditionalInformationOptions</code></td>
+                            <td>List valid values for a picklist field (e.g. Pets Allowed, Children Allowed, Parking) used in organisational data</td>
+                            <td>filterName</td>
                         </tr>
                         <tr>
                             <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">✏️ Owner-Scoped Write Tools <span style="font-weight: normal; font-size: 0.85rem; color: #6c757d;">(require an MCP agent token)</span></td>
@@ -613,6 +673,11 @@
                             <td>stayId, roomId, plus any room fields to change</td>
                         </tr>
                         <tr>
+                            <td><code>deleteStayRoom</code></td>
+                            <td>Soft-delete a room from a Stay</td>
+                            <td>stayId, roomId</td>
+                        </tr>
+                        <tr>
                             <td><code>createStayPackage</code></td>
                             <td>Create a new pricing package on a Stay, optionally with initial price tiers</td>
                             <td>stayId, packageName, prices (optional array), and more</td>
@@ -623,9 +688,24 @@
                             <td>stayId, packageId, plus any package/price fields to change</td>
                         </tr>
                         <tr>
+                            <td><code>deleteStayPackage</code></td>
+                            <td>Permanently delete a pricing package and all its price tiers (hard delete, unlike rooms)</td>
+                            <td>stayId, packageId</td>
+                        </tr>
+                        <tr>
                             <td><code>updateStayOrganisationalData</code></td>
                             <td>Update a Stay's address, check-in/out policy, pets/children/parking, cancellation policy</td>
                             <td>stayId, plus any organisational fields to change</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateStayContacts</code></td>
+                            <td>Update a Stay's public-facing contact details</td>
+                            <td>stayId, plus any contact fields to change</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateStayFacilities</code></td>
+                            <td>Set the full list of selected facility checkboxes for one facility group on a Stay. Anything not included is unchecked</td>
+                            <td>stayId, group, facilityDetailIds (full replacement list)</td>
                         </tr>
                         <tr>
                             <td><code>updateHostBusinessProfile</code></td>
@@ -636,6 +716,26 @@
                             <td><code>uploadStayPhoto</code></td>
                             <td>Upload a photo to a Stay's listing, main, workspace, host, or room photo area. Supply a public https:// URL <em>or</em> base64-encoded bytes. Every photo is validated for JPEG format, size, minimum resolution (1920×1080 landscape, or 1080×1920 portrait for the "host" area) and is re-encoded server-side before storage</td>
                             <td>stayId, area, url or base64, roomId (required when area is "room")</td>
+                        </tr>
+                        <tr>
+                            <td><code>deleteStayPhoto</code></td>
+                            <td>Delete a Stay-level photo by area and filename</td>
+                            <td>stayId, area, fileName</td>
+                        </tr>
+                        <tr>
+                            <td><code>reorderStayPhotos</code></td>
+                            <td>Reorder a Stay's photos within a given area</td>
+                            <td>stayId, area, fileNames (full ordered list)</td>
+                        </tr>
+                        <tr>
+                            <td><code>deleteRoomPhoto</code></td>
+                            <td>Delete a room-level photo by area and filename</td>
+                            <td>stayId, roomId, roomArea, fileName</td>
+                        </tr>
+                        <tr>
+                            <td><code>reorderRoomPhotos</code></td>
+                            <td>Reorder a room's photos within a given area</td>
+                            <td>stayId, roomId, roomArea, fileNames (full ordered list)</td>
                         </tr>
                     </tbody>
                 </table>
