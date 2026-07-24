@@ -856,6 +856,81 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "deleteStayRoom") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const roomId = request.params.arguments?.roomId ?? null;
+    if (!stayId) throw new Error("Tool 'deleteStayRoom' requires 'stayId' argument");
+    if (!roomId) throw new Error("Tool 'deleteStayRoom' requires 'roomId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      await mcpAgentClient.deleteRoom(String(stayId), String(roomId));
+      return CompatibilityHelper.formatToolResponse({ deleted: true, stayId, roomId });
+    } catch (err: any) {
+      throw new Error(`deleteStayRoom failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getRoomTypeOptions") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'getRoomTypeOptions' requires 'stayId' argument (valid room types depend on whether the Stay is boutique or standard, and — for standard Stays — which types are already in use)");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getRoomTypesForStay(String(stayId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getRoomTypeOptions failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getRoomFacilityOptions") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getRoomFacilities();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getRoomFacilityOptions failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "deleteRoomPhoto") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const roomId = request.params.arguments?.roomId ?? null;
+    const roomArea = request.params.arguments?.roomArea ?? null;
+    const fileName = request.params.arguments?.fileName ?? null;
+    if (!stayId) throw new Error("Tool 'deleteRoomPhoto' requires 'stayId' argument");
+    if (!roomId) throw new Error("Tool 'deleteRoomPhoto' requires 'roomId' argument");
+    if (!roomArea) throw new Error("Tool 'deleteRoomPhoto' requires 'roomArea' argument ('photos' or 'workspace')");
+    if (!fileName) throw new Error("Tool 'deleteRoomPhoto' requires 'fileName' argument (call getMyStayRooms to find it)");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      await mcpAgentClient.deleteRoomPhoto(String(stayId), String(roomId), String(roomArea), String(fileName));
+      return CompatibilityHelper.formatToolResponse({ deleted: true, stayId, roomId, roomArea, fileName });
+    } catch (err: any) {
+      throw new Error(`deleteRoomPhoto failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "reorderRoomPhotos") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const roomId = request.params.arguments?.roomId ?? null;
+    const roomArea = request.params.arguments?.roomArea ?? null;
+    const fileNames = request.params.arguments?.fileNames ?? null;
+    if (!stayId) throw new Error("Tool 'reorderRoomPhotos' requires 'stayId' argument");
+    if (!roomId) throw new Error("Tool 'reorderRoomPhotos' requires 'roomId' argument");
+    if (!roomArea) throw new Error("Tool 'reorderRoomPhotos' requires 'roomArea' argument ('photos' or 'workspace')");
+    if (!Array.isArray(fileNames)) {
+      throw new Error("Tool 'reorderRoomPhotos' requires 'fileNames' as an array — the full room gallery in the desired order (call getMyStayRooms first)");
+    }
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      await mcpAgentClient.reorderRoomPhotos(String(stayId), String(roomId), String(roomArea), { fileNames });
+      return CompatibilityHelper.formatToolResponse({ reordered: true, stayId, roomId, roomArea });
+    } catch (err: any) {
+      throw new Error(`reorderRoomPhotos failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+
   if (request.params.name === "createStayPackage") {
     const stayId = request.params.arguments?.stayId ?? null;
     if (!stayId) throw new Error("Tool 'createStayPackage' requires 'stayId' argument");
@@ -1624,7 +1699,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "getMyStayRooms",
-        description: "List all rooms currently configured on one of your Stays, including bed setup, occupancy, and facilities. Call this before createStayRoom or updateStayRoom so the agent can show current values or find the right roomId. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        description: "List all rooms currently configured on one of your Stays, including bed setup, occupancy, facilities (resolved to names, not just IDs), and every room/workspace photo as a viewable CDN URL. Call this before createStayRoom, updateStayRoom, deleteStayRoom, deleteRoomPhoto, or reorderRoomPhotos so the agent can show current values or find the right roomId/fileName. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: {
           type: "object",
           properties: {
@@ -1680,43 +1755,111 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "createStayRoom",
-        description: "Create a new room on a Stay. Requires an MCP agent token scoped to the owning account.",
+        description: "Create a new room on a Stay. Call getRoomTypeOptions(stayId) and getRoomFacilityOptions() first to find valid roomTypeFK/roomFacilityFk values. Requires an MCP agent token scoped to the owning account.",
         inputSchema: {
           type: "object",
           properties: {
             stayId: { type: "number", description: "The Stay's EntryID" },
             roomTitle: { type: "string", description: "Room name/title" },
             roomDescription: { type: "string", description: "OPTIONAL: room description" },
-            roomTypeFK: { type: "number", description: "OPTIONAL: room type id" },
+            roomTypeFK: { type: "number", description: "OPTIONAL: a roomTypeId from getRoomTypeOptions(stayId) — valid values differ per Stay (boutique vs standard, and for standard Stays, only types already used on that Stay)." },
             beds: { type: "number", description: "OPTIONAL: number of beds" },
             maxPerson: { type: "number", description: "OPTIONAL: max occupancy" },
-            mainBedSize: { type: "string", description: "OPTIONAL: main bed size" },
-            otherBedSize: { type: "string", description: "OPTIONAL: other bed size" },
-            roomFacilityFk: { type: "string", description: "OPTIONAL: CSV of room facility IDs" },
-            mcpRoomId: { type: "string", description: "OPTIONAL: external MCP room identifier to bind" }
+            mainBedSize: { type: "string", enum: ["Single", "Double", "Twin", "Queen", "King", "Other"], description: "OPTIONAL: main bed size" },
+            otherBedSize: { type: "string", enum: ["Single", "Double", "Twin", "Queen", "King", "Other", ""], description: "OPTIONAL: other bed size, or empty for none" },
+            roomFacilityFk: {
+              type: "array",
+              items: { type: "number" },
+              description: "OPTIONAL: facilityDetailId values from getRoomFacilityOptions() — the full set of amenities this room has. Wi-Fi is added automatically even if omitted."
+            },
+            mcpRoomId: { type: "string", description: "OPTIONAL: external MCP room identifier to bind. NOT AVAILABLE for boutique Stays — the host UI has no field for this there, and the API will reject it." }
           },
           required: ["stayId", "roomTitle"]
         }
       },
       {
         name: "updateStayRoom",
-        description: "Update an existing room on a Stay. Only fields supplied are changed. Requires an MCP agent token scoped to the owning account.",
+        description: "Update an existing room on a Stay. Only fields supplied are changed. Call getRoomTypeOptions(stayId) and getRoomFacilityOptions() first to find valid roomTypeFK/roomFacilityFk values. Requires an MCP agent token scoped to the owning account.",
         inputSchema: {
           type: "object",
           properties: {
             stayId: { type: "number", description: "The Stay's EntryID" },
-            roomId: { type: "number", description: "The room's EntryID (tbStaysRoom)" },
+            roomId: { type: "number", description: "The room's EntryID (tbStaysRoom) — use getMyStayRooms to find it" },
             roomTitle: { type: "string" },
             roomDescription: { type: "string" },
-            roomTypeFK: { type: "number" },
+            roomTypeFK: { type: "number", description: "A roomTypeId from getRoomTypeOptions(stayId)." },
             beds: { type: "number" },
             maxPerson: { type: "number" },
-            mainBedSize: { type: "string" },
-            otherBedSize: { type: "string" },
-            roomFacilityFk: { type: "string", description: "CSV of room facility IDs" },
-            mcpRoomId: { type: "string", description: "External MCP room identifier" }
+            mainBedSize: { type: "string", enum: ["Single", "Double", "Twin", "Queen", "King", "Other"] },
+            otherBedSize: { type: "string", enum: ["Single", "Double", "Twin", "Queen", "King", "Other", ""] },
+            roomFacilityFk: {
+              type: "array",
+              items: { type: "number" },
+              description: "The FULL replacement list of facilityDetailId values from getRoomFacilityOptions() — anything not included will be removed (except Wi-Fi, which is always kept)."
+            },
+            mcpRoomId: { type: "string", description: "External MCP room identifier. NOT AVAILABLE for boutique Stays — the host UI has no field for this there, and the API will reject it." }
           },
           required: ["stayId", "roomId"]
+        }
+      },
+      {
+        name: "deleteStayRoom",
+        description: "Delete (soft-delete) a room from a Stay. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            roomId: { type: "number", description: "The room's EntryID — use getMyStayRooms to find it" }
+          },
+          required: ["stayId", "roomId"]
+        }
+      },
+      {
+        name: "getRoomTypeOptions",
+        description: "List valid room types for a specific Stay's rooms (roomTypeFK in createStayRoom/updateStayRoom). Valid values depend on the Stay: boutique Stays choose from a fixed boutique type range; standard Stays are restricted to types already used on one of their own rooms. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "getRoomFacilityOptions",
+        description: "List every room-level amenity/facility option available (roomFacilityFk in createStayRoom/updateStayRoom) — e.g. Wi-Fi, Air Conditioning, Private Bathroom. Wi-Fi is mandatory and always included even if not explicitly selected. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: { type: "object", properties: {}, required: [] }
+      },
+      {
+        name: "deleteRoomPhoto",
+        description: "Delete one photo from a room's gallery. Call getMyStayRooms first to find the exact fileName. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            roomId: { type: "number", description: "The room's EntryID" },
+            roomArea: { type: "string", enum: ["photos", "workspace"], description: "'photos' for the regular room gallery, 'workspace' for the room's coworking gallery" },
+            fileName: { type: "string", description: "The exact file name from getMyStayRooms" }
+          },
+          required: ["stayId", "roomId", "roomArea", "fileName"]
+        }
+      },
+      {
+        name: "reorderRoomPhotos",
+        description: "Change the display order of a room's photo gallery. fileNames must be the FULL current gallery (same set, just reordered) — call getMyStayRooms first. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            roomId: { type: "number", description: "The room's EntryID" },
+            roomArea: { type: "string", enum: ["photos", "workspace"], description: "'photos' for the regular room gallery, 'workspace' for the room's coworking gallery" },
+            fileNames: {
+              type: "array",
+              items: { type: "string" },
+              description: "The complete gallery file names in the new desired order — must match the current set exactly (call getMyStayRooms first)"
+            }
+          },
+          required: ["stayId", "roomId", "roomArea", "fileNames"]
         }
       },
       {

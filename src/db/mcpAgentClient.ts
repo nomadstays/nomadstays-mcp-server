@@ -93,4 +93,13 @@ export const mcpAgentClient = {
     call("DELETE", `/stays/${stayId}/photos/${encodeURIComponent(area)}/${encodeURIComponent(fileName)}`),
   reorderStayPhotos: (stayId: string | number, area: string, body: unknown) =>
     call("PATCH", `/stays/${stayId}/photos/${encodeURIComponent(area)}/order`, body),
+
+  deleteRoom: (stayId: string | number, roomId: string | number) =>
+    call("DELETE", `/stays/${stayId}/rooms/${roomId}`),
+  getRoomTypesForStay: (stayId: string | number) => call("GET", `/stays/${stayId}/reference/room-types`),
+  getRoomFacilities: () => call("GET", `/reference/room-facilities`),
+  deleteRoomPhoto: (stayId: string | number, roomId: string | number, roomArea: string, fileName: string) =>
+    call("DELETE", `/stays/${stayId}/rooms/${roomId}/photos/${encodeURIComponent(roomArea)}/${encodeURIComponent(fileName)}`),
+  reorderRoomPhotos: (stayId: string | number, roomId: string | number, roomArea: string, body: unknown) =>
+    call("PATCH", `/stays/${stayId}/rooms/${roomId}/photos/${encodeURIComponent(roomArea)}/order`, body),
 };
