@@ -1755,14 +1755,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "createStayRoom",
-        description: "Create a new room on a Stay. Call getRoomTypeOptions(stayId) and getRoomFacilityOptions() first to find valid roomTypeFK/roomFacilityFk values. Requires an MCP agent token scoped to the owning account.",
+        description: "Create a new room on a Stay. Call getRoomTypeOptions(stayId) and getRoomFacilityOptions() first to find valid roomTypeFK/roomFacilityFk values. Boutique Stays are capped at 6 rooms total (one per Boutique1-6 slot) — creation is rejected once all 6 exist. Requires an MCP agent token scoped to the owning account.",
         inputSchema: {
           type: "object",
           properties: {
             stayId: { type: "number", description: "The Stay's EntryID" },
             roomTitle: { type: "string", description: "Room name/title" },
             roomDescription: { type: "string", description: "OPTIONAL: room description" },
-            roomTypeFK: { type: "number", description: "OPTIONAL: a roomTypeId from getRoomTypeOptions(stayId) — valid values differ per Stay (boutique vs standard, and for standard Stays, only types already used on that Stay)." },
+            roomTypeFK: { type: "number", description: "OPTIONAL: a roomTypeId from getRoomTypeOptions(stayId). IGNORED for boutique Stays — the next available Boutique1-6 slot is auto-assigned server-side, matching the host UI (which has no room-type picker for boutique room creation)." },
             beds: { type: "number", description: "OPTIONAL: number of beds" },
             maxPerson: { type: "number", description: "OPTIONAL: max occupancy" },
             mainBedSize: { type: "string", enum: ["Single", "Double", "Twin", "Queen", "King", "Other"], description: "OPTIONAL: main bed size" },
