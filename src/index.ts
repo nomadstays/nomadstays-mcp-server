@@ -1901,7 +1901,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             listed: { type: "boolean", description: "OPTIONAL: whether the package is publicly listed" },
             startDate: { type: "string", format: "date", description: "OPTIONAL: first check-in date this package is available for" },
             endDate: { type: "string", format: "date", description: "OPTIONAL: last check-in date this package is available for" },
-            advertisingEndpoint: { type: "string", description: "OPTIONAL: only meaningful for Advertising-business-model Stays" },
+            advertisingEndpoint: { type: "string", description: "OPTIONAL: only usable on Advertising-business-model Stays — ignored otherwise, matching the host UI which hides this field for all other business models. Check getBusinessModelOptions / the Stay's businessModelFK before setting." },
             prices: {
               type: "array",
               description: "OPTIONAL: initial price tiers. If supplied, replaces all price rows for the package. Exactly one entry per 7/14/21/30-night tier used.",
@@ -1910,7 +1910,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 properties: {
                   days: { type: "number", enum: [7, 14, 21, 30], description: "Length-of-stay tier in nights — must be one of 7, 14, 21, 30, the only tiers the host UI supports" },
                   buyPrice: { type: "number", description: "Internal cost basis. SellPrice is NOT settable — it is always server-computed from buyPrice (buyPrice / 0.88, or = buyPrice for Advertising-model Stays), matching the host UI exactly" },
-                  comparisonSellPrice: { type: "number", description: "OPTIONAL: strike-through comparison price" },
                   listed: { type: "boolean", description: "Whether this price tier is publicly listed" }
                 },
                 required: ["days", "buyPrice", "listed"]
@@ -1937,7 +1936,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             isActive: { type: "boolean", description: "OPTIONAL: archive (false) or restore (true) this package — cascades to 'listed' on all its price tiers, matching the host UI's Archive/Restore actions" },
             startDate: { type: "string", format: "date", description: "OPTIONAL: first check-in date this package is available for" },
             endDate: { type: "string", format: "date", description: "OPTIONAL: last check-in date this package is available for" },
-            advertisingEndpoint: { type: "string", description: "OPTIONAL: only meaningful for Advertising-business-model Stays" },
+            advertisingEndpoint: { type: "string", description: "OPTIONAL: only usable on Advertising-business-model Stays — ignored otherwise, matching the host UI which hides this field for all other business models." },
             prices: {
               type: "array",
               description: "OPTIONAL: replaces ALL price rows for this package when supplied. Exactly one entry per 7/14/21/30-night tier used.",
@@ -1946,7 +1945,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 properties: {
                   days: { type: "number", enum: [7, 14, 21, 30], description: "Length-of-stay tier in nights — must be one of 7, 14, 21, 30" },
                   buyPrice: { type: "number", description: "Internal cost basis. SellPrice is NOT settable — always server-computed from buyPrice" },
-                  comparisonSellPrice: { type: "number" },
                   listed: { type: "boolean" }
                 },
                 required: ["days", "buyPrice", "listed"]
