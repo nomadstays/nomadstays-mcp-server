@@ -1,6 +1,6 @@
 {
   "name": "nomadstays-mcp-server",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A Model Context Protocol server",
   "private": true,
   "type": "module",
