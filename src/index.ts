@@ -76,6 +76,7 @@ import { Request as ExpressRequest, Response as ExpressResponse } from "express"
 import { MCPRequestLogger } from "./tracking/requestLogger.js";
 import { createTrackingMiddleware } from "./tracking/middleware.js";
 import { createStatsEndpoints } from "./tracking/statsEndpoints.js";
+import { runWithRequestAgentToken } from "./tracking/requestTokenContext.js";
 
 
 /**
@@ -1777,12 +1778,16 @@ async function main() {
         // between callers, since there is no session to correlate them by.
         app.post('/mcp', async (req, res) => {
             try {
+                const authHeader = req.headers['authorization'];
+                const bearerMatch = typeof authHeader === 'string' ? authHeader.match(/^Bearer\s+(.+)$/i) : null;
+                const callerToken = bearerMatch ? bearerMatch[1].trim() : undefined;
+
                 const transport = new StreamableHTTPServerTransport({
                     sessionIdGenerator: undefined,
                 });
                 res.on('close', () => transport.close());
                 await server.connect(transport);
-                await transport.handleRequest(req, res, req.body);
+                await runWithRequestAgentToken(callerToken, () => transport.handleRequest(req, res, req.body));
             } catch (err: any) {
                 console.error('StreamableHTTP request failed:', err?.stack ?? String(err));
                 if (!res.headersSent) {
