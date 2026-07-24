@@ -133,7 +133,7 @@ const CompatibilityHelper = {
  */
 const server = new Server(
   {
-    name: "nomadstays-mcp25-dev",
+    name: "nomadstays-mcp-server",
     version: "0.1.0",
   },
   {
@@ -2267,7 +2267,7 @@ async function main() {
         app.get('/health', (req, res) => {
             res.json({ 
                 status: 'ok', 
-                service: 'nomadstays-mcp25-dev',
+                service: 'nomadstays-mcp-server',
                 timestamp: new Date().toISOString(),
                 version: '0.1.0',
                 transport: 'streamable-http',
