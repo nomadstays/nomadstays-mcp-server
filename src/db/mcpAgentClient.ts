@@ -3,10 +3,18 @@
  * NomadStays web app (Controllers/McpAgentApiController.cs), authenticated
  * with a bearer token issued at Pages/siteadmin/mcp-tokens-admin.cshtml.
  *
- * The token is read from NOMADSTAYS_MCP_AGENT_TOKEN, the same env-var-per-
- * deployment convention already used for NOMADSTAYS_DB_CONNECTION — one
- * running instance of this server acts on behalf of one host account.
+ * The token comes from the caller's own `Authorization: Bearer mcp_...` header
+ * on the incoming /mcp request (see requestTokenContext.ts), NOT from a
+ * server-wide env var — every caller must present their own token, scoped to
+ * their own host account, or write tools are refused. This was previously a
+ * single shared NOMADSTAYS_MCP_AGENT_TOKEN env var used on behalf of every
+ * caller regardless of who they were, which let anonymous callers of this
+ * MCP server trigger writes against whichever host account that token
+ * belonged to. NOMADSTAYS_MCP_AGENT_TOKEN is still supported as a fallback
+ * ONLY for local/stdio mode (no per-request caller to take a token from).
  */
+
+import { getRequestAgentToken } from "../tracking/requestTokenContext.js";
 
 const DEFAULT_BASE_URL = "https://nomadstays.com/api/mcp-agent";
 
@@ -15,11 +23,11 @@ function getBaseUrl(): string {
 }
 
 function getToken(): string {
-  const token = process.env.NOMADSTAYS_MCP_AGENT_TOKEN;
+  const token = getRequestAgentToken() ?? process.env.NOMADSTAYS_MCP_AGENT_TOKEN;
   if (!token) {
     throw new Error(
-      "Environment variable NOMADSTAYS_MCP_AGENT_TOKEN must be set to call write tools " +
-      "(issue a token at nomadstays.com/siteadmin/mcp-tokens-admin)"
+      "No MCP agent token supplied. Send 'Authorization: Bearer <token>' with your MCP request " +
+      "(issue a token at nomadstays.com/siteadmin/mcp-tokens-admin)."
     );
   }
   return token;
