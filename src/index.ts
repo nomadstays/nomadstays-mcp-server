@@ -156,7 +156,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
       connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
       if (!connStr) {
-        throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+        throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
       }
       try {
         const { getStaysByWiFiSpeed } = await import('./db/getStaysByWiFiSpeed.js');
@@ -185,7 +185,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // strip surrounding quotes and fix port syntax if user pasted incorrectly
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -220,7 +220,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // strip surrounding quotes and fix port syntax if user pasted incorrectly
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -255,7 +255,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // strip surrounding quotes and fix port syntax if user pasted incorrectly
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -371,7 +371,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // strip surrounding quotes and fix port syntax if user pasted incorrectly
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -403,7 +403,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // strip surrounding quotes and fix port syntax if user pasted incorrectly
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -430,7 +430,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // strip surrounding quotes and fix port syntax if user pasted incorrectly
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -465,7 +465,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -503,7 +503,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -542,7 +542,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -578,7 +578,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -616,7 +616,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -650,7 +650,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -674,7 +674,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
@@ -709,7 +709,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
     connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query Azure SQL");
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
 
     try {
