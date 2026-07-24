@@ -449,6 +449,52 @@
                     }
                     }</div>
 
+                <div style="background: #fff8e1; border: 1px solid #ffca28; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0;">
+                    <h3 style="margin-top: 0;">🔑 Setting Up Your AI Assistant as a Trusted Stay Partner (Step-by-Step)</h3>
+                    <p style="margin-bottom: 1rem;">If you manage a Stay on NomadStays, you can let your own AI assistant read and update your listing, rooms, prices, and photos for you. You don't need to know how to code — just follow these steps exactly. This currently only works with <strong>Claude Desktop</strong> (the downloadable Claude app, not the claude.ai website, and not ChatGPT — see the note at the end).</p>
+
+                    <h4 style="margin-top: 1.5rem;">Step 1 — Turn on two-factor authentication</h4>
+                    <p>Before you can request a token, your NomadStays account needs two-factor authentication (2FA) turned on. This protects your listing in case the token is ever lost or copied. Go to <a href="https://www.nomadstays.com/Account/EnableAuthenticator" target="_blank">Enable two-factor authentication</a> and follow the on-screen instructions if you haven't already.</p>
+
+                    <h4 style="margin-top: 1.5rem;">Step 2 — Request your token</h4>
+                    <p>Go to your <a href="https://www.nomadstays.com/stayadmin/user-profile-stays" target="_blank">Stay profile page</a> and find the <strong>"MCP agent token"</strong> section. Click <strong>"Request a new token"</strong>. The NomadStays team will review and issue your token, then send it to you securely — this usually takes a short while, not instantly.</p>
+                    <p style="background: #fffbe6; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem;"><strong>⚠️ When you receive your token</strong> (a long string of letters and numbers starting with <code>mcp_</code>), copy it and save it somewhere safe, like a password manager or a private note. It's shown in full only once — if you lose it, contact NomadStays to revoke it and issue a new one.</p>
+
+                    <h4 style="margin-top: 1.5rem;">Step 3 — Install Claude Desktop (if you don't have it)</h4>
+                    <p>Download and install Claude Desktop from <a href="https://claude.ai/download" target="_blank">claude.ai/download</a> for Mac or Windows, and sign in.</p>
+
+                    <h4 style="margin-top: 1.5rem;">Step 4 — Open the configuration file</h4>
+                    <p>Claude Desktop stores its settings in a small text file. You'll need to open it in a plain text editor (like Notepad on Windows, or TextEdit on Mac):</p>
+                    <ul style="margin: 0.5rem 0 0.5rem 1.5rem;">
+                        <li><strong>Windows:</strong> Press <code>Windows key + R</code>, type <code>%APPDATA%\Claude</code>, and press Enter. Open the file named <code>claude_desktop_config.json</code> with Notepad. (If the folder or file doesn't exist yet, open Claude Desktop once first, or create the file yourself.)</li>
+                        <li><strong>Mac:</strong> In Finder, press <code>Cmd + Shift + G</code>, paste in <code>~/Library/Application Support/Claude</code>, and press Enter. Open <code>claude_desktop_config.json</code> with TextEdit.</li>
+                    </ul>
+
+                    <h4 style="margin-top: 1.5rem;">Step 5 — Paste in this configuration</h4>
+                    <p>Replace the entire contents of the file with the text below, then replace <code>YOUR_TOKEN_HERE</code> with the token you copied in Step 2 (keep the quote marks, just swap what's inside them):</p>
+                    <div class="code-block">
+{
+  "mcpServers": {
+    "nomadstays": {
+      "type": "http",
+      "url": "https://mcp.nomadstays.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TOKEN_HERE"
+      }
+    }
+  }
+}</div>
+                    <p style="margin-top: 0.5rem;">Save the file and close the text editor.</p>
+
+                    <h4 style="margin-top: 1.5rem;">Step 6 — Restart Claude Desktop</h4>
+                    <p>Fully quit Claude Desktop (don't just close the window — make sure it's not still running in the background) and open it again.</p>
+
+                    <h4 style="margin-top: 1.5rem;">Step 7 — Try it out</h4>
+                    <p>Start a new conversation and ask something like: <em>"List my Stays"</em> or <em>"Show me the current price packages on my Stay."</em> If Claude responds with your real listing data, it's working. If nothing happens, double-check the token was pasted correctly with no extra spaces, and that you fully restarted Claude Desktop.</p>
+
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: #6c757d;"><strong>Not supported yet:</strong> the claude.ai website and ChatGPT cannot currently connect using a token like this — they only support a different login method (OAuth) that this server doesn't offer yet. If you use either of those, please check back later or contact <a href="mailto:tech@nomadstays.com">tech@nomadstays.com</a>.</p>
+                </div>
+
                 <h3>Available Tools</h3>
                 <table>
                     <thead>
