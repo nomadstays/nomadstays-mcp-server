@@ -25,7 +25,7 @@ function getToken(): string {
   return token;
 }
 
-async function call(method: "GET" | "POST" | "PATCH", path: string, body?: unknown): Promise<any> {
+async function call(method: "GET" | "POST" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<any> {
   const response = await fetch(`${getBaseUrl()}${path}`, {
     method,
     headers: {
@@ -84,6 +84,13 @@ export const mcpAgentClient = {
   getStayTypes: () => call("GET", `/reference/stay-types`),
   getCountries: () => call("GET", `/reference/countries`),
   getCancellationPolicies: () => call("GET", `/reference/cancellation-policies`),
+  getBusinessModels: () => call("GET", `/reference/business-models`),
   getAdditionalInformationOptions: (filterName: string) =>
     call("GET", `/reference/additional-information/${encodeURIComponent(filterName)}`),
+
+  getStayPhotos: (stayId: string | number) => call("GET", `/stays/${stayId}/photos`),
+  deleteStayPhoto: (stayId: string | number, area: string, fileName: string) =>
+    call("DELETE", `/stays/${stayId}/photos/${encodeURIComponent(area)}/${encodeURIComponent(fileName)}`),
+  reorderStayPhotos: (stayId: string | number, area: string, body: unknown) =>
+    call("PATCH", `/stays/${stayId}/photos/${encodeURIComponent(area)}/order`, body),
 };

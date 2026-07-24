@@ -1045,6 +1045,62 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "getBusinessModelOptions") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getBusinessModels();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getBusinessModelOptions failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getMyStayPhotos") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'getMyStayPhotos' requires 'stayId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getStayPhotos(String(stayId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyStayPhotos failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "deleteStayPhoto") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const area = request.params.arguments?.area ?? null;
+    const fileName = request.params.arguments?.fileName ?? null;
+    if (!stayId) throw new Error("Tool 'deleteStayPhoto' requires 'stayId' argument");
+    if (!area) throw new Error("Tool 'deleteStayPhoto' requires 'area' argument (listing, main, workspace, or host)");
+    if (!fileName) throw new Error("Tool 'deleteStayPhoto' requires 'fileName' argument (call getMyStayPhotos to find it)");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      await mcpAgentClient.deleteStayPhoto(String(stayId), String(area), String(fileName));
+      return CompatibilityHelper.formatToolResponse({ deleted: true, stayId, area, fileName });
+    } catch (err: any) {
+      throw new Error(`deleteStayPhoto failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "reorderStayPhotos") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const area = request.params.arguments?.area ?? null;
+    const fileNames = request.params.arguments?.fileNames ?? null;
+    if (!stayId) throw new Error("Tool 'reorderStayPhotos' requires 'stayId' argument");
+    if (!area) throw new Error("Tool 'reorderStayPhotos' requires 'area' argument ('listing' or 'workspace')");
+    if (!Array.isArray(fileNames)) {
+      throw new Error("Tool 'reorderStayPhotos' requires 'fileNames' as an array — the full gallery in the desired order (call getMyStayPhotos first to see current filenames)");
+    }
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      await mcpAgentClient.reorderStayPhotos(String(stayId), String(area), { fileNames });
+      return CompatibilityHelper.formatToolResponse({ reordered: true, stayId, area });
+    } catch (err: any) {
+      throw new Error(`reorderStayPhotos failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   throw new Error("Unknown tool");
 });
 
@@ -1760,7 +1816,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             reason1: { type: "string", description: "First 'Why Choose Us' reason shown to guests" },
             reason2: { type: "string" },
             reason3: { type: "string" },
-            receiveReviews: { type: "boolean" }
+            receiveReviews: { type: "boolean" },
+            geoLat: { type: "number", description: "Map pin latitude" },
+            geoLng: { type: "number", description: "Map pin longitude" },
+            fullPayment: { type: "boolean", description: "Whether guests must pay in full up front (vs. pay on arrival). Only settable if the Stay's country allows it — check fullPaymentAllowedByCountry from getMyStayOrganisationalData first; writing true when the country doesn't allow it will be rejected." }
           },
           required: ["stayId"]
         }
@@ -1904,7 +1963,54 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["filterName"]
         }
+      },
+      {
+        name: "getBusinessModelOptions",
+        description: "List valid values for a Stay's listing/business model (businessModelId, read-only — displayed on the Stay but not editable via MCP or the host UI itself). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: { type: "object", properties: {}, required: [] }
+      },
+      {
+        name: "getMyStayPhotos",
+        description: "Get every current photo for a Stay across all areas (listing gallery, main/hero, workspace/coworking gallery, host), each as a full https:// CDN URL an agent can view directly (not just a filename). Call this before deleteStayPhoto or reorderStayPhotos to see current filenames. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "deleteStayPhoto",
+        description: "Delete one photo from a Stay. Call getMyStayPhotos first to find the exact fileName. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            area: { type: "string", enum: ["listing", "main", "workspace", "host"], description: "Which photo area the file belongs to (room photos aren't supported by this tool — manage those via updateStayRoom)" },
+            fileName: { type: "string", description: "The exact file name from getMyStayPhotos, e.g. '69bdf22cdb0c43a7be3e825a0a3a2074.jpg'" }
+          },
+          required: ["stayId", "area", "fileName"]
+        }
+      },
+      {
+        name: "reorderStayPhotos",
+        description: "Change the display order of a Stay's listing or workspace photo gallery. fileNames must be the FULL current gallery (same set of files, just reordered) — call getMyStayPhotos first. This only reorders; it cannot add or remove photos. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            area: { type: "string", enum: ["listing", "workspace"], description: "Only these two areas support reordering" },
+            fileNames: {
+              type: "array",
+              items: { type: "string" },
+              description: "The complete gallery file names in the new desired order — must match the current set exactly (call getMyStayPhotos first)"
+            }
+          },
+          required: ["stayId", "area", "fileNames"]
+        }
       }
+
     ]
   };
 });
