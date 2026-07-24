@@ -936,6 +936,115 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "getMyStayContacts") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'getMyStayContacts' requires 'stayId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getStayContacts(String(stayId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyStayContacts failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "updateStayContacts") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'updateStayContacts' requires 'stayId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    const { stayId: _s, ...body } = request.params.arguments as Record<string, unknown>;
+    try {
+      await mcpAgentClient.patchStayContacts(String(stayId), body);
+      return CompatibilityHelper.formatToolResponse({ updated: true, stayId });
+    } catch (err: any) {
+      throw new Error(`updateStayContacts failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getMyStayFacilities") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const group = request.params.arguments?.group ?? null;
+    if (!stayId) throw new Error("Tool 'getMyStayFacilities' requires 'stayId' argument");
+    if (!group) throw new Error("Tool 'getMyStayFacilities' requires 'group' argument (call getFacilityGroups to see valid group names)");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getStayFacilities(String(stayId), String(group));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyStayFacilities failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "updateStayFacilities") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const group = request.params.arguments?.group ?? null;
+    const facilityDetailIds = request.params.arguments?.facilityDetailIds ?? null;
+    if (!stayId) throw new Error("Tool 'updateStayFacilities' requires 'stayId' argument");
+    if (!group) throw new Error("Tool 'updateStayFacilities' requires 'group' argument");
+    if (!Array.isArray(facilityDetailIds)) {
+      throw new Error("Tool 'updateStayFacilities' requires 'facilityDetailIds' as an array (the FULL replacement list of selected IDs — call getMyStayFacilities first to see current selections and valid IDs)");
+    }
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      await mcpAgentClient.patchStayFacilities(String(stayId), String(group), { facilityDetailIds });
+      return CompatibilityHelper.formatToolResponse({ updated: true, stayId, group });
+    } catch (err: any) {
+      throw new Error(`updateStayFacilities failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getFacilityGroups") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getFacilityGroups();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getFacilityGroups failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getStayTypeOptions") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getStayTypes();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getStayTypeOptions failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getCountryOptions") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getCountries();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getCountryOptions failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getCancellationPolicyOptions") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getCancellationPolicies();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getCancellationPolicyOptions failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getAdditionalInformationOptions") {
+    const filterName = request.params.arguments?.filterName ?? null;
+    if (!filterName) throw new Error("Tool 'getAdditionalInformationOptions' requires 'filterName' (one of: Children Allowed, Pets Allowed, Parking)");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getAdditionalInformationOptions(String(filterName));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getAdditionalInformationOptions failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   throw new Error("Unknown tool");
 });
 
@@ -1621,7 +1730,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "updateStayOrganisationalData",
-        description: "Update a Stay's organisational data: address, check-in/out policy, pets/children/parking, cancellation policy, tourism/land-registration numbers. Only fields supplied are changed. Requires an MCP agent token scoped to the owning account.",
+        description: "Update a Stay's organisational data: address, check-in/out policy, pets/children/parking, cancellation policy, accommodation type, tourism/land-registration numbers, 'Why Choose Us' reasons, and more. Only fields supplied are changed. IMPORTANT: countryId, petsAllowedId, childrenAllowedId, parkingId, cxPolicyId, and stayTypeId are lookup IDs, NOT plain text or booleans — call getCountryOptions / getAdditionalInformationOptions / getCancellationPolicyOptions / getStayTypeOptions first to find the correct ID to send. Requires an MCP agent token scoped to the owning account.",
         inputSchema: {
           type: "object",
           properties: {
@@ -1630,19 +1739,28 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             city: { type: "string" },
             state: { type: "string" },
             postCode: { type: "string" },
-            country: { type: "string" },
+            countryId: { type: "string", description: "A country ID from getCountryOptions — NOT a country name." },
             checkInFrom: { type: "string" },
             checkInTo: { type: "string" },
             checkOutFrom: { type: "string" },
             checkOutTo: { type: "string" },
             earlyCheckIn: { type: "boolean" },
             lateCheckout: { type: "boolean" },
-            petsAllowed: { type: "boolean" },
-            childrenAllowed: { type: "boolean" },
-            parking: { type: "boolean" },
-            cxPolicy: { type: "string", description: "Cancellation policy text" },
+            petsAllowedId: { type: "string", description: "An optionId from getAdditionalInformationOptions(filterName='Pets Allowed') — NOT a boolean." },
+            childrenAllowedId: { type: "string", description: "An optionId from getAdditionalInformationOptions(filterName='Children Allowed') — NOT a boolean." },
+            parkingId: { type: "string", description: "An optionId from getAdditionalInformationOptions(filterName='Parking') — NOT a boolean." },
+            cxPolicyId: { type: "string", description: "A cxPolicyId from getCancellationPolicyOptions." },
+            customCxPolicyLink: { type: "string" },
             tourismNumber: { type: "string" },
-            landRegistrationNumber: { type: "string" }
+            landRegistrationNumber: { type: "string" },
+            registeredBusiness: { type: "boolean", description: "Whether the Stay is officially registered for tourism/lodging" },
+            stayTypeId: { type: "number", description: "A stayTypeId from getStayTypeOptions." },
+            totalRooms: { type: "number" },
+            checkinLocationWhat3Words: { type: "string", description: "what3words location for guest check-in" },
+            reason1: { type: "string", description: "First 'Why Choose Us' reason shown to guests" },
+            reason2: { type: "string" },
+            reason3: { type: "string" },
+            receiveReviews: { type: "boolean" }
           },
           required: ["stayId"]
         }
@@ -1685,6 +1803,106 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             roomId: { type: "number", description: "Required when area is 'room' — the room's EntryID (use getMyStayRooms to find it). Ignored for other areas." }
           },
           required: ["stayId", "area"]
+        }
+      },
+
+      {
+        name: "getMyStayContacts",
+        description: "Get a Stay's contact/owner/manager details and social media links: owner name/email/mobile, manager (day-to-day contact person) name/email/mobile, booking email/phone/mobile, host display name, and website/Facebook/Twitter/YouTube/Instagram/TikTok/LinkedIn links. Call this before updateStayContacts so the agent knows current values. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "updateStayContacts",
+        description: "Update a Stay's contact/owner/manager details and social media links. Only fields supplied are changed. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            ownerName: { type: "string" },
+            ownerEmail: { type: "string" },
+            ownerMobile: { type: "string" },
+            managerName: { type: "string", description: "The day-to-day contact person's name (not necessarily the owner)" },
+            managerEmail: { type: "string" },
+            managerMobile: { type: "string" },
+            bookingEmail: { type: "string", description: "Email guests use to reach the Stay about bookings" },
+            bookingPhone: { type: "string" },
+            bookingMobile: { type: "string" },
+            hostFullName: { type: "string", description: "Display name shown to guests as the host" },
+            website: { type: "string" },
+            facebookPage: { type: "string" },
+            twitter: { type: "string", description: "X (Twitter) profile link" },
+            youtube: { type: "string" },
+            instagram: { type: "string" },
+            tikTok: { type: "string" },
+            linkedIn: { type: "string" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "getMyStayFacilities",
+        description: "Get the available options AND current selections for one facility/checkbox group on a Stay — e.g. 'Languages Spoken' returns every language the platform supports plus which ones are currently selected for this Stay. Call getFacilityGroups first if you don't know the exact group name. Common groups: 'General', 'Services', 'Languages Spoken', 'Meal', 'Position', 'Remote Worker'. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            group: { type: "string", description: "Exact facility group name, e.g. 'Languages Spoken', 'General', 'Services', 'Meal', 'Position', 'Remote Worker' (call getFacilityGroups for the full list)" }
+          },
+          required: ["stayId", "group"]
+        }
+      },
+      {
+        name: "updateStayFacilities",
+        description: "Set which options are selected for one facility/checkbox group on a Stay — e.g. which languages are spoken. facilityDetailIds is the COMPLETE replacement list: anything not included will be UNCHECKED. Call getMyStayFacilities first to see current selections and valid IDs before changing them. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            group: { type: "string", description: "Exact facility group name, matching what getMyStayFacilities was called with" },
+            facilityDetailIds: {
+              type: "array",
+              items: { type: "number" },
+              description: "The FULL list of facilityDetailId values that should be selected after this call — call getMyStayFacilities first to see valid IDs. An empty array clears all selections in this group."
+            }
+          },
+          required: ["stayId", "group", "facilityDetailIds"]
+        }
+      },
+      {
+        name: "getFacilityGroups",
+        description: "List every facility/checkbox group name that exists on the platform (e.g. 'Languages Spoken', 'General', 'Services', 'Meal', 'Position', 'Remote Worker'). Call this first if you don't already know the exact group name to pass to getMyStayFacilities/updateStayFacilities. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: { type: "object", properties: {}, required: [] }
+      },
+      {
+        name: "getStayTypeOptions",
+        description: "List valid values for a Stay's 'Main Accommodation Type' (stayTypeId in updateStayOrganisationalData). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: { type: "object", properties: {}, required: [] }
+      },
+      {
+        name: "getCountryOptions",
+        description: "List valid values for a Stay's country (countryId in updateStayOrganisationalData), with each country's name and 2-letter code. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: { type: "object", properties: {}, required: [] }
+      },
+      {
+        name: "getCancellationPolicyOptions",
+        description: "List valid values for a Stay's cancellation policy (cxPolicyId in updateStayOrganisationalData). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: { type: "object", properties: {}, required: [] }
+      },
+      {
+        name: "getAdditionalInformationOptions",
+        description: "List valid values for one of the Additional Information picklists used in updateStayOrganisationalData: Children Allowed, Pets Allowed, or Parking. These are NOT booleans — they're lookup IDs (e.g. 'Yes', 'No', 'On Request') — call this to find the right value before writing petsAllowedId/childrenAllowedId/parkingId. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            filterName: { type: "string", enum: ["Children Allowed", "Pets Allowed", "Parking"], description: "Which picklist to fetch options for" }
+          },
+          required: ["filterName"]
         }
       }
     ]

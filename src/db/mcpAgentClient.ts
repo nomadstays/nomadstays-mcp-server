@@ -71,4 +71,19 @@ export const mcpAgentClient = {
   patchBusinessProfile: (body: unknown) => call("PATCH", `/profile/business`, body),
 
   uploadPhoto: (stayId: string | number, body: unknown) => call("POST", `/stays/${stayId}/photos`, body),
+
+  getStayContacts: (stayId: string | number) => call("GET", `/stays/${stayId}/contacts`),
+  patchStayContacts: (stayId: string | number, body: unknown) => call("PATCH", `/stays/${stayId}/contacts`, body),
+
+  getStayFacilities: (stayId: string | number, group: string) =>
+    call("GET", `/stays/${stayId}/facilities/${encodeURIComponent(group)}`),
+  patchStayFacilities: (stayId: string | number, group: string, body: unknown) =>
+    call("PATCH", `/stays/${stayId}/facilities/${encodeURIComponent(group)}`, body),
+
+  getFacilityGroups: () => call("GET", `/reference/facility-groups`),
+  getStayTypes: () => call("GET", `/reference/stay-types`),
+  getCountries: () => call("GET", `/reference/countries`),
+  getCancellationPolicies: () => call("GET", `/reference/cancellation-policies`),
+  getAdditionalInformationOptions: (filterName: string) =>
+    call("GET", `/reference/additional-information/${encodeURIComponent(filterName)}`),
 };
