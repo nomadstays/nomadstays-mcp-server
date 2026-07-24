@@ -226,7 +226,7 @@
             <p>The Nomad Stays MCP Server provides access to a curated database of remote-work-friendly accommodations
                 around the world. This API supports both the Model Context Protocol (MCP) for AI assistants and standard
                 REST endpoints for direct integration.</p>
-            <p style="margin-top: 0.75rem;"><strong>New:</strong> hosts can now issue an MCP agent token (see
+            <p style="margin-top: 0.75rem;"><strong>New:</strong> Trusted Stay Partners can now request an MCP agent token (see
                 <a href="https://www.nomadstays.com/siteadmin/mcp-tokens-admin" target="_blank">Token Management</a>)
                 so their own AI assistant can look up and update their Stay listings, rooms, pricing packages,
                 organisational data, business profile, and photos on their behalf. See the
@@ -591,7 +591,7 @@
                         </tr>
                         <tr>
                             <td><code>getMyBusinessProfile</code></td>
-                            <td>Get the host account's business profile (legal name, VAT/registration numbers)</td>
+                            <td>Get the Trusted Stay Partner account's business profile (legal name, VAT/registration numbers)</td>
                             <td>None</td>
                         </tr>
                         <tr>
@@ -629,12 +629,12 @@
                         </tr>
                         <tr>
                             <td><code>updateHostBusinessProfile</code></td>
-                            <td>Update the host account's business profile. Never touches bank or tax-ID details</td>
+                            <td>Update the Trusted Stay Partner account's business profile. Never touches bank or tax-ID details</td>
                             <td>businessName, vatNumber, businessNumber, entityAccount — all optional</td>
                         </tr>
                         <tr>
                             <td><code>uploadStayPhoto</code></td>
-                            <td>Upload a photo to a Stay's listing, main, workspace, host, or room photo area. Supply a public https:// URL <em>or</em> base64-encoded bytes. Every photo is validated for JPEG format, size, minimum resolution (1920×1080 landscape, or 1080×1920 portrait for the host area) and is re-encoded server-side before storage</td>
+                            <td>Upload a photo to a Stay's listing, main, workspace, host, or room photo area. Supply a public https:// URL <em>or</em> base64-encoded bytes. Every photo is validated for JPEG format, size, minimum resolution (1920×1080 landscape, or 1080×1920 portrait for the "host" area) and is re-encoded server-side before storage</td>
                             <td>stayId, area, url or base64, roomId (required when area is "room")</td>
                         </tr>
                     </tbody>
