@@ -2,6 +2,8 @@
 
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import sql from "mssql";
+import type { Stay } from "./types/stay.js";
 
 // Detect if we're running in HTTP mode (Azure App Service) or stdio mode (MCP Inspector/Client)
 const isHttpMode = !!(process.env.PORT || process.env.HTTP_PORT);
@@ -129,12 +131,21 @@ const CompatibilityHelper = {
 };
 
 /**
- * Create an MCP server with capabilities for resources (to list/read stays)
- * and tools (to query stays).
- * 
- * Fully compatible with both Claude and ChatGPT/OpenAI models
+ * Builds a fresh MCP Server with capabilities for resources (to list/read stays) and tools
+ * (to query stays). Fully compatible with both Claude and ChatGPT/OpenAI models.
+ *
+ * IMPORTANT: call this fresh for every /mcp HTTP request (see the handler below) — the SDK's
+ * Server.connect() throws "Already connected to a transport" if the same Server instance is
+ * connected to a second transport before the first is closed, which under any concurrent
+ * traffic on a shared singleton crashed requests essentially at random. Building a new Server
+ * (cheap — the tool/resource definitions below are static data, not per-request work) and
+ * connecting it to a fresh StreamableHTTPServerTransport per request eliminates that race
+ * entirely. Stdio mode (main()'s non-HTTP branch, used by Claude Desktop) still uses a single
+ * shared instance further below — that path is genuinely single-connection for its whole
+ * process lifetime, so the race doesn't apply there.
  */
-const server = new Server(
+function createServer(): Server {
+  const server = new Server(
   {
     name: "nomadstays-mcp-server",
     version: "0.1.0",
@@ -146,9 +157,6 @@ const server = new Server(
     },
   }
 );
-
-import sql from "mssql";
-import type { Stay } from "./types/stay.js";
 
 // Register the "getStaysByCountry" and "getStaysByContinent" tools using setRequestHandler for CallToolRequestSchema
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -2208,9 +2216,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
     ]
   };
-});
+  });
 
+  return server;
+}
 
+// Single shared instance for stdio mode (main()'s non-HTTP branch) and the module-level
+// default export, both of which are genuinely single-connection for the process's lifetime —
+// only the HTTP /mcp handler needs a fresh instance per request (createServer() called there).
+const server = createServer();
 
 
 
@@ -2338,11 +2352,15 @@ async function main() {
                     return;
                 }
 
+                // Fresh Server per request — see createServer()'s doc comment for why sharing
+                // one instance across concurrent requests crashes with "Already connected to a
+                // transport."
+                const requestServer = createServer();
                 const transport = new StreamableHTTPServerTransport({
                     sessionIdGenerator: undefined,
                 });
                 res.on('close', () => transport.close());
-                await server.connect(transport);
+                await requestServer.connect(transport);
                 await runWithRequestAgentToken(callerToken, () => transport.handleRequest(req, res, req.body));
             } catch (err: any) {
                 console.error('StreamableHTTP request failed:', err?.stack ?? String(err));
