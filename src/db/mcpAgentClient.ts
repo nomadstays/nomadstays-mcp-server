@@ -62,6 +62,9 @@ export const mcpAgentClient = {
   createPackage: (stayId: string | number, body: unknown) => call("POST", `/stays/${stayId}/packages`, body),
   patchPackage: (stayId: string | number, packageId: string | number, body: unknown) =>
     call("PATCH", `/stays/${stayId}/packages/${packageId}`, body),
+  deletePackage: (stayId: string | number, packageId: string | number) =>
+    call("DELETE", `/stays/${stayId}/packages/${packageId}`),
+  getCurrencies: () => call("GET", `/reference/currencies`),
 
   getStayOrganisational: (stayId: string | number) => call("GET", `/stays/${stayId}/organisational`),
   patchStayOrganisational: (stayId: string | number, body: unknown) =>

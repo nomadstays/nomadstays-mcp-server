@@ -963,6 +963,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "deleteStayPackage") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const packageId = request.params.arguments?.packageId ?? null;
+    if (!stayId) throw new Error("Tool 'deleteStayPackage' requires 'stayId' argument");
+    if (!packageId) throw new Error("Tool 'deleteStayPackage' requires 'packageId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      await mcpAgentClient.deletePackage(String(stayId), String(packageId));
+      return CompatibilityHelper.formatToolResponse({ deleted: true, stayId, packageId });
+    } catch (err: any) {
+      throw new Error(`deleteStayPackage failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getCurrencyOptions") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getCurrencies();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getCurrencyOptions failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   if (request.params.name === "updateStayOrganisationalData") {
     const stayId = request.params.arguments?.stayId ?? null;
     if (!stayId) throw new Error("Tool 'updateStayOrganisationalData' requires 'stayId' argument");
@@ -1871,23 +1895,25 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID" },
             packageName: { type: "string", description: "Package name" },
             description: { type: "string", description: "OPTIONAL: package description" },
-            roomTypeFK: { type: "number", description: "OPTIONAL: room type id this package covers" },
-            currencyFK: { type: "number", description: "OPTIONAL: currency id (1=EUR, 2=USD, 3=GBP, 4=ZAR, 5=DKK)" },
+            roomTypeFK: { type: "number", description: "OPTIONAL: room type id this package covers. Call getRoomTypeOptions for valid values." },
+            currencyFK: { type: "number", description: "OPTIONAL: currency id. Call getCurrencyOptions for valid values." },
             maxPax: { type: "number", description: "OPTIONAL: max occupancy for this package" },
             listed: { type: "boolean", description: "OPTIONAL: whether the package is publicly listed" },
+            startDate: { type: "string", format: "date", description: "OPTIONAL: first check-in date this package is available for" },
+            endDate: { type: "string", format: "date", description: "OPTIONAL: last check-in date this package is available for" },
+            advertisingEndpoint: { type: "string", description: "OPTIONAL: only meaningful for Advertising-business-model Stays" },
             prices: {
               type: "array",
-              description: "OPTIONAL: initial price tiers. If supplied, replaces all price rows for the package.",
+              description: "OPTIONAL: initial price tiers. If supplied, replaces all price rows for the package. Exactly one entry per 7/14/21/30-night tier used.",
               items: {
                 type: "object",
                 properties: {
-                  days: { type: "number", description: "Length-of-stay tier in days" },
-                  buyPrice: { type: "number", description: "Internal cost basis" },
-                  sellPrice: { type: "number", description: "Retail sell price" },
+                  days: { type: "number", enum: [7, 14, 21, 30], description: "Length-of-stay tier in nights — must be one of 7, 14, 21, 30, the only tiers the host UI supports" },
+                  buyPrice: { type: "number", description: "Internal cost basis. SellPrice is NOT settable — it is always server-computed from buyPrice (buyPrice / 0.88, or = buyPrice for Advertising-model Stays), matching the host UI exactly" },
                   comparisonSellPrice: { type: "number", description: "OPTIONAL: strike-through comparison price" },
                   listed: { type: "boolean", description: "Whether this price tier is publicly listed" }
                 },
-                required: ["days", "buyPrice", "sellPrice", "listed"]
+                required: ["days", "buyPrice", "listed"]
               }
             }
           },
@@ -1904,27 +1930,50 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             packageId: { type: "number", description: "The package's EntryID (tbStayPackages)" },
             packageName: { type: "string" },
             description: { type: "string" },
-            roomTypeFK: { type: "number" },
-            currencyFK: { type: "number", description: "1=EUR, 2=USD, 3=GBP, 4=ZAR, 5=DKK" },
+            roomTypeFK: { type: "number", description: "Call getRoomTypeOptions for valid values." },
+            currencyFK: { type: "number", description: "Call getCurrencyOptions for valid values." },
             maxPax: { type: "number" },
             listed: { type: "boolean" },
+            isActive: { type: "boolean", description: "OPTIONAL: archive (false) or restore (true) this package — cascades to 'listed' on all its price tiers, matching the host UI's Archive/Restore actions" },
+            startDate: { type: "string", format: "date", description: "OPTIONAL: first check-in date this package is available for" },
+            endDate: { type: "string", format: "date", description: "OPTIONAL: last check-in date this package is available for" },
+            advertisingEndpoint: { type: "string", description: "OPTIONAL: only meaningful for Advertising-business-model Stays" },
             prices: {
               type: "array",
-              description: "OPTIONAL: replaces ALL price rows for this package when supplied",
+              description: "OPTIONAL: replaces ALL price rows for this package when supplied. Exactly one entry per 7/14/21/30-night tier used.",
               items: {
                 type: "object",
                 properties: {
-                  days: { type: "number" },
-                  buyPrice: { type: "number" },
-                  sellPrice: { type: "number" },
+                  days: { type: "number", enum: [7, 14, 21, 30], description: "Length-of-stay tier in nights — must be one of 7, 14, 21, 30" },
+                  buyPrice: { type: "number", description: "Internal cost basis. SellPrice is NOT settable — always server-computed from buyPrice" },
                   comparisonSellPrice: { type: "number" },
                   listed: { type: "boolean" }
                 },
-                required: ["days", "buyPrice", "sellPrice", "listed"]
+                required: ["days", "buyPrice", "listed"]
               }
             }
           },
           required: ["stayId", "packageId"]
+        }
+      },
+      {
+        name: "deleteStayPackage",
+        description: "Permanently delete a pricing package and all its price tiers from a Stay. This is a hard delete (unlike room deletion, which is soft). Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            packageId: { type: "number", description: "The package's EntryID (tbStayPackages) to delete" }
+          },
+          required: ["stayId", "packageId"]
+        }
+      },
+      {
+        name: "getCurrencyOptions",
+        description: "List valid currency ids/codes for use as a package's currencyFK.",
+        inputSchema: {
+          type: "object",
+          properties: {}
         }
       },
       {
