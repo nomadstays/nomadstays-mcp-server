@@ -16,7 +16,13 @@
 
 import { getRequestAgentToken } from "../tracking/requestTokenContext.js";
 
-const DEFAULT_BASE_URL = "https://nomadstays.com/api/mcp-agent";
+// www. explicitly, not the apex domain: nomadstays.com 302-redirects to www.nomadstays.com,
+// and both fetch and curl strip the Authorization header on cross-host redirects per the
+// fetch spec's redirect-fetch algorithm — every call through the apex silently lost its
+// bearer token on the hop and got a 401 back from McpAgentApiController with no token at all,
+// not even an invalid one. Found by tracing a live Claude.ai request that had a genuinely
+// valid, correctly resource-bound OAuth token but still got rejected.
+const DEFAULT_BASE_URL = "https://www.nomadstays.com/api/mcp-agent";
 
 function getBaseUrl(): string {
   return (process.env.NOMADSTAYS_MCP_AGENT_BASE_URL ?? DEFAULT_BASE_URL).replace(/\/+$/, "");

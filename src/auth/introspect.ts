@@ -11,7 +11,12 @@
  * canonical URI — a token minted for some other resource must not work here.
  */
 
-const OAUTH_BASE_URL = (process.env.NOMADSTAYS_OAUTH_BASE_URL ?? "https://nomadstays.com").replace(/\/+$/, "");
+// www. explicitly: nomadstays.com 302-redirects to www.nomadstays.com, and a 302 on a POST can
+// get converted to a GET across the hop by some clients/specs — pointing directly at www.
+// avoids the redirect entirely rather than relying on it behaving correctly. See the matching
+// fix + comment in ../db/mcpAgentClient.ts, where the same apex-vs-www redirect silently
+// stripped the Authorization header on every single request.
+const OAUTH_BASE_URL = (process.env.NOMADSTAYS_OAUTH_BASE_URL ?? "https://www.nomadstays.com").replace(/\/+$/, "");
 
 // Canonical resource URI this server identifies itself as, per RFC 8707. Must match exactly
 // what /oauth/authorize and /oauth/token were told via the `resource` parameter.
