@@ -77,6 +77,8 @@ import { MCPRequestLogger } from "./tracking/requestLogger.js";
 import { createTrackingMiddleware } from "./tracking/middleware.js";
 import { createStatsEndpoints } from "./tracking/statsEndpoints.js";
 import { runWithRequestAgentToken } from "./tracking/requestTokenContext.js";
+import { requestCallsProtectedTool } from "./auth/protectedTools.js";
+import { isTokenAcceptable, RESOURCE_URI } from "./auth/introspect.js";
 
 
 /**
@@ -2264,6 +2266,22 @@ async function main() {
             next();
         });
         
+        // RFC 9728 protected resource metadata — tells MCP clients (Claude.ai, ChatGPT) which
+        // authorization server issues tokens for this resource server, so they can run the
+        // OAuth flow themselves when a protected tool call gets a 401. Served unconditionally,
+        // not just as a fallback to the WWW-Authenticate header, since the MCP spec (2025-11-25)
+        // requires clients to support proactive well-known-URI discovery too.
+        const protectedResourceMetadata = {
+            resource: RESOURCE_URI,
+            authorization_servers: ["https://nomadstays.com"],
+        };
+        app.get('/.well-known/oauth-protected-resource', (req, res) => {
+            res.json(protectedResourceMetadata);
+        });
+        app.get('/.well-known/oauth-protected-resource/mcp', (req, res) => {
+            res.json(protectedResourceMetadata);
+        });
+
         // Health check endpoint
         app.get('/health', (req, res) => {
             res.json({ 
@@ -2299,6 +2317,26 @@ async function main() {
                 const authHeader = req.headers['authorization'];
                 const bearerMatch = typeof authHeader === 'string' ? authHeader.match(/^Bearer\s+(.+)$/i) : null;
                 const callerToken = bearerMatch ? bearerMatch[1].trim() : undefined;
+
+                // "Lazy authentication" (MCP's documented pattern for servers mixing public and
+                // owner-scoped tools on one endpoint): initialize/tools/list and PUBLIC tool
+                // calls always succeed with no credentials. Only when this specific request is a
+                // tools/call targeting a PROTECTED tool do we gate on the token — and if it's
+                // missing or fails validation, respond with a transport-level 401 +
+                // WWW-Authenticate, not a silent JSON-RPC tool error. That distinction matters:
+                // MCP clients (Claude.ai, ChatGPT) only auto-trigger their OAuth "Connect" UI on
+                // a real 401, never on a 200 with isError:true — an ordinary thrown Error from
+                // deep in a tool handler (as this server used to rely on) is invisible to them.
+                if (requestCallsProtectedTool(req.body) && !(await isTokenAcceptable(callerToken))) {
+                    res.status(401)
+                        .set('WWW-Authenticate', `Bearer resource_metadata="https://mcp.nomadstays.com/.well-known/oauth-protected-resource"`)
+                        .json({
+                            jsonrpc: '2.0',
+                            error: { code: -32001, message: 'Authentication required for this tool.' },
+                            id: req.body?.id ?? null,
+                        });
+                    return;
+                }
 
                 const transport = new StreamableHTTPServerTransport({
                     sessionIdGenerator: undefined,
