@@ -2302,7 +2302,7 @@ async function main() {
                 status: 'ok', 
                 service: 'nomadstays-mcp-server',
                 timestamp: new Date().toISOString(),
-                version: '0.1.0',
+                version: '0.6.2',
                 transport: 'streamable-http',
                 endpoints: {
                     mcp: '/mcp',
@@ -2534,177 +2534,10 @@ async function main() {
             }
         });
         
-        // API endpoint for countries
-        app.get('/api/countries', async (req, res) => {
-            try {
-                const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-                let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-                connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-                
-                if (!connStr) {
-                    return res.status(500).json({ 
-                        error: "Environment variable NOMADSTAYS_DB_CONNECTION must be set" 
-                    });
-                }
-
-                const { getAllCountries } = await import('./db/getStaysByCountry.js');
-                const countries = await getAllCountries(connStr);
-                
-                res.json({ data: countries, count: countries.length });
-            } catch (error: any) {
-                console.error('API Error:', error);
-                res.status(500).json({ 
-                    error: `Failed to fetch countries: ${error?.message ?? String(error)}` 
-                });
-            }
-        });
-        
-        // API endpoint for amenities
-        app.get('/api/amenities', async (req, res) => {
-            try {
-                const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-                let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-                connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-                
-                if (!connStr) {
-                    return res.status(500).json({ 
-                        error: "Environment variable NOMADSTAYS_DB_CONNECTION must be set" 
-                    });
-                }
-
-                const { getAllAmenities } = await import('./db/getStaysByCountry.js');
-                const amenities = await getAllAmenities(connStr);
-                
-                res.json({ data: amenities, count: amenities.length });
-            } catch (error: any) {
-                console.error('API Error:', error);
-                res.status(500).json({ 
-                    error: `Failed to fetch amenities: ${error?.message ?? String(error)}` 
-                });
-            }
-        });
-        
-        // API endpoints for stays
-        app.get('/api/stays', async (req, res) => {
-            try {
-                const { countrycode, limit } = req.query;
-                const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-                let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-                connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-                
-                if (!connStr) {
-                    return res.status(500).json({ 
-                        error: "Environment variable NOMADSTAYS_DB_CONNECTION must be set" 
-                    });
-                }
-
-                const { getStaysByCountry } = await import('./db/getStaysByCountry.js');
-                const stays = await getStaysByCountry(connStr, { 
-                    country: countrycode ? String(countrycode) : null, 
-                    limit: limit ? Number(limit) : 15 
-                });
-                
-                res.json({ data: stays, count: stays.length });
-            } catch (error: any) {
-                console.error('API Error:', error);
-                res.status(500).json({ 
-                    error: `Failed to fetch stays: ${error?.message ?? String(error)}` 
-                });
-            }
-        });
-
-        app.get('/api/stays/:id', async (req, res) => {
-            try {
-                const { id } = req.params;
-                const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-                let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-                connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-                
-                if (!connStr) {
-                    return res.status(500).json({ 
-                        error: "Environment variable NOMADSTAYS_DB_CONNECTION must be set" 
-                    });
-                }
-
-                const { getStayByID } = await import('./db/getStayByID.js');
-                const stay = await getStayByID(connStr, id);
-                
-                if (!stay) {
-                    return res.status(404).json({ error: `Stay ${id} not found` });
-                }
-                
-                res.json({ data: stay });
-            } catch (error: any) {
-                console.error('API Error:', error);
-                res.status(500).json({ 
-                    error: `Failed to fetch stay: ${error?.message ?? String(error)}` 
-                });
-            }
-        });
-        
-        
-        // API endpoints for stays
-        app.get('/api/stays', async (req, res) => {
-            try {
-                const { countrycode, limit } = req.query;
-                const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-                let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-                connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-                
-                if (!connStr) {
-                    return res.status(500).json({ 
-                        error: "Environment variable NOMADSTAYS_DB_CONNECTION must be set" 
-                    });
-                }
-
-                const { getStaysByCountry } = await import('./db/getStaysByCountry.js');
-                const stays = await getStaysByCountry(connStr, { 
-                    country: countrycode ? String(countrycode) : null, 
-                    limit: limit ? Number(limit) : 15 
-                });
-                
-                res.json({ data: stays, count: stays.length });
-            } catch (error: any) {
-                console.error('API Error:', error);
-                res.status(500).json({ 
-                    error: `Failed to fetch stays: ${error?.message ?? String(error)}` 
-                });
-            }
-        });
-
-        app.get('/api/stays/:id', async (req, res) => {
-            try {
-                const { id } = req.params;
-                const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-                let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-                connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-                
-                if (!connStr) {
-                    return res.status(500).json({ 
-                        error: "Environment variable NOMADSTAYS_DB_CONNECTION must be set" 
-                    });
-                }
-
-                const { getStayByID } = await import('./db/getStayByID.js');
-                const stay = await getStayByID(connStr, id);
-                
-                if (!stay) {
-                    return res.status(404).json({ error: `Stay ${id} not found` });
-                }
-                
-                res.json({ data: stay });
-            } catch (error: any) {
-                console.error('API Error:', error);
-                res.status(500).json({ 
-                    error: `Failed to fetch stay: ${error?.message ?? String(error)}` 
-                });
-            }
-        });
-        
         app.listen(Number(port), () => {
-            console.error(`HTTP API server listening on port ${port}`);
+            console.error(`MCP server listening on port ${port}`);
             console.error(`Health check: http://localhost:${port}/health`);
-            console.error(`API endpoints: /api/countries, /api/amenities, /api/stays, /api/stays/:id`);
+            console.error(`MCP endpoint: http://localhost:${port}/mcp`);
         });
     } else {
         // Stdio mode for standard MCP protocol

@@ -204,11 +204,6 @@
             background: #764ba2;
             color: white;
         }
-
-        .badge-rest {
-            background: #61affe;
-            color: white;
-        }
     </style>
 </head>
 
@@ -216,7 +211,7 @@
     <div class="header">
         <h1>🏡 Nomad Stays MCP Server</h1>
         <p>Find the perfect remote work accommodation worldwide</p>
-        <p style="font-size: 0.9rem; margin-top: 0.5rem;">API Version 0.6.1 | Base URL:
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">API Version 0.6.2 | Base URL:
             <code><a href="https://mcp.nomadstays.com" target="_blank" style="color: #fff; text-decoration: underline;">https://mcp.nomadstays.com</a></code></p>
     </div>
 
@@ -224,8 +219,7 @@
         <div class="section">
             <h2>📖 Overview</h2>
             <p>The Nomad Stays MCP Server provides access to a curated database of remote-work-friendly accommodations
-                around the world. This API supports both the Model Context Protocol (MCP) for AI assistants and standard
-                REST endpoints for direct integration.</p>
+                around the world via the Model Context Protocol (MCP), for use with AI assistants like Claude and ChatGPT.</p>
             <p style="margin-top: 0.75rem;"><strong>New:</strong> Trusted Stay Partners can now request an MCP agent token (see
                 <a href="https://www.nomadstays.com/siteadmin/mcp-tokens-admin" target="_blank">Token Management</a>)
                 so their own AI assistant can look up and update their Stay listings, rooms, pricing packages,
@@ -234,10 +228,6 @@
                 below.</p>
 
             <div class="quick-links">
-                <a href="#endpoints" class="quick-link">
-                    <h4>🔌 API Endpoints</h4>
-                    <p>Browse available REST endpoints</p>
-                </a>
                 <a href="#mcp" class="quick-link">
                     <h4>🤖 MCP Protocol</h4>
                     <p>Use with AI assistants like Claude</p>
@@ -261,121 +251,6 @@
             </div>
         </div>
 
-        <div class="section" id="endpoints">
-            <h2>🔌 REST API Endpoints</h2>
-
-            <div class="endpoint">
-                <span class="method get">GET</span>
-                <span class="endpoint-url">/health</span>
-                <p style="margin-top: 0.5rem;">Health check endpoint to verify the server is running.</p>
-
-                <h3>Response</h3>
-                <div class="code-block">
-                    {
-                    "status": "healthy",
-                    "timestamp": "2025-01-15T10:30:00Z"
-                    }</div>
-            </div>
-
-            <div class="endpoint">
-                <span class="method get">GET</span>
-                <span class="endpoint-url">/api/stays</span>
-                <p style="margin-top: 0.5rem;">Retrieve a list of stays with optional filtering.</p>
-
-                <h3>Query Parameters</h3>
-                <div class="parameter">
-                    <span class="parameter-name">countrycode</span>
-                    <span class="parameter-type">(string)</span>
-                    <span class="optional">Optional</span>
-                    <p>ISO 3166-1 alpha-2 country code (e.g., PT, ES, TH, MX, CO)</p>
-                </div>
-
-                <div class="parameter">
-                    <span class="parameter-name">limit</span>
-                    <span class="parameter-type">(integer)</span>
-                    <span class="optional">Optional</span>
-                    <p>Maximum number of results to return (default: 10, max: 100)</p>
-                </div>
-
-                <h3>Example Request</h3>
-                <div class="code-block">
-                    GET https://mcp.nomadstays.com/api/stays?countrycode=PT&limit=5</div>
-
-                <h3>Example Response</h3>
-                <div class="code-block">
-                    {
-                    "stays": [
-                    {
-                    "id": "stay_001",
-                    "name": "Lisbon Co-living Hub",
-                    "description": "Modern co-living space in the heart of Lisbon",
-                    "country": "Portugal",
-                    "countryCode": "PT",
-                    "city": "Lisbon",
-                    "pricePerMonth": 850,
-                    "currency": "EUR",
-                    "amenities": ["high_speed_wifi", "dedicated_desk", "kitchen", "coworking_space"],
-                    "coordinates": {
-                    "latitude": 38.7223,
-                    "longitude": -9.1393
-                    },
-                    "images": ["https://example.com/image1.jpg"],
-                    "bookingUrl": "https://www.nomadstays.com/stays/001"
-                    }
-                    ],
-                    "count": 1,
-                    "filters": {
-                    "countryCode": "PT",
-                    "limit": 5
-                    }
-                    }</div>
-            </div>
-
-            <div class="endpoint">
-                <span class="method get">GET</span>
-                <span class="endpoint-url">/api/stays/{id}</span>
-                <p style="margin-top: 0.5rem;">Retrieve detailed information about a specific stay.</p>
-
-                <h3>Path Parameters</h3>
-                <div class="parameter">
-                    <span class="parameter-name">id</span>
-                    <span class="parameter-type">(string)</span>
-                    <span class="required">Required</span>
-                    <p>Unique identifier for the stay</p>
-                </div>
-
-                <h3>Example Request</h3>
-                <div class="code-block">
-                    GET https://mcp.nomadstays.com/api/stays/stay_001</div>
-
-                <h3>Example Response</h3>
-                <div class="code-block">
-                    {
-                    "id": "stay_001",
-                    "name": "Lisbon Co-living Hub",
-                    "description": "Modern co-living space in the heart of Lisbon with fast WiFi...",
-                    "longDescription": "Full detailed description with multiple paragraphs...",
-                    "country": "Portugal",
-                    "countryCode": "PT",
-                    "city": "Lisbon",
-                    "neighborhood": "Príncipe Real",
-                    "pricePerMonth": 850,
-                    "currency": "EUR",
-                    "amenities": ["high_speed_wifi", "dedicated_desk", "kitchen", "coworking_space"],
-                    "wifiSpeed": 200,
-                    "coordinates": {
-                    "latitude": 38.7223,
-                    "longitude": -9.1393
-                    },
-                    "images": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
-                    "bookingUrl": "https://www.nomadstays.com/stays/001",
-                    "reviews": {
-                    "average": 4.5,
-                    "count": 42
-                    }
-                    }</div>
-            </div>
-        </div>
 
         <div class="section" id="mcp">
             <h2>🤖 Model Context Protocol (MCP)</h2>
@@ -1068,7 +943,7 @@ sig = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
     </div>
 
     <div style="text-align: center; padding: 2rem; color: #6c757d;">
-        <p>Nomad Stays MCP Server v0.6.1 | Made for digital nomads and remote workers 🌎</p>
+        <p>Nomad Stays MCP Server v0.6.2 | Made for digital nomads and remote workers 🌎</p>
     </div>
 </body>
 
