@@ -770,6 +770,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "getMyStayOnboardingStatus") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'getMyStayOnboardingStatus' requires 'stayId' argument");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getOnboardingStatus(String(stayId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getMyStayOnboardingStatus failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   if (request.params.name === "getMyStayRooms") {
     const stayId = request.params.arguments?.stayId ?? null;
     if (!stayId) throw new Error("Tool 'getMyStayRooms' requires 'stayId' argument");
@@ -1724,6 +1737,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "getMyStayDetail",
         description: "Get the current title, description, and listed status for one of your Stays. Call this before updateStayDetail so the agent knows the current values and doesn't accidentally overwrite them. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
+          },
+          required: ["stayId"]
+        }
+      },
+      {
+        name: "getMyStayOnboardingStatus",
+        description: "Get the Stay's listing-completion scores — the same six 'Listing Completion' cards shown on the Stay dashboard (Stay Details, Availability, Rooms, Packages, Wi-Fi, Operator Information), plus an overall completion percentage. Use this when a host asks how far along they are with onboarding or what's left to finish. Note: Wi-Fi is a test-freshness score (recency of the last speed test), not a speed rating, and Operator Information is a status label ('Open'), not a real percentage — both are noted via isPlaceholder/behavior in the response. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: {
           type: "object",
           properties: {

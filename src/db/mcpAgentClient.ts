@@ -66,6 +66,7 @@ export const mcpAgentClient = {
   getMyStays: () => call("GET", `/stays`),
   getStayDetail: (stayId: string | number) => call("GET", `/stays/${stayId}`),
   patchStayDetail: (stayId: string | number, body: unknown) => call("PATCH", `/stays/${stayId}`, body),
+  getOnboardingStatus: (stayId: string | number) => call("GET", `/stays/${stayId}/onboarding-status`),
 
   getRooms: (stayId: string | number) => call("GET", `/stays/${stayId}/rooms`),
   createRoom: (stayId: string | number, body: unknown) => call("POST", `/stays/${stayId}/rooms`, body),
