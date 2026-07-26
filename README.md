@@ -34,6 +34,7 @@ The tools above are read-only and public. A separate set of tools lets an **auth
 | Tool | Description |
 |---|---|
 | `getMyStays` / `getMyStayDetail` / `updateStayDetail` | Read/update a Stay's core details (title, description, address, policies) |
+| `getMyStayOnboardingStatus` | The six "Listing Completion" scores from the Stay dashboard (Stay Details, Availability, Rooms, Packages, Wi-Fi, Operator Information) plus an overall percentage — Wi-Fi is a test-freshness score, not a speed rating |
 | `getMyStayRooms` / `createStayRoom` / `updateStayRoom` / `deleteStayRoom` | Full room CRUD, including bed sizes, facilities, and photos |
 | `getRoomTypeOptions` / `getRoomFacilityOptions` | Reference lookups for valid room types/facilities (differ for boutique vs standard Stays) |
 | `uploadStayPhoto` / `getMyStayPhotos` / `deleteStayPhoto` / `reorderStayPhotos` | Stay-level photo management, including reordering |
