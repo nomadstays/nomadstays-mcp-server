@@ -618,13 +618,13 @@
                         </tr>
                         <tr>
                             <td><code>getProductInfo</code></td>
-                            <td>Look up a product's price and purchasability — currently only product 8, the Stay Application fee (EUR 39)</td>
+                            <td>Look up a product's price and purchasability — product 8 (Stay Application) or product 9 (Experience Application), both EUR 39</td>
                             <td>productId</td>
                         </tr>
                         <tr>
                             <td><code>purchaseProduct</code></td>
                             <td>Start a purchase on the caller's own behalf. Returns a checkoutUrl the member must open and pay themselves, or resolves immediately as "waived" if the caller already qualifies for a fee waiver</td>
-                            <td>productId, applicationId (optional — correlates the payment to a Stay Application)</td>
+                            <td>productId (8 for Stay Application, 9 for Experience Application), applicationId (optional — correlates the payment to the application)</td>
                         </tr>
                         <tr>
                             <td><code>getPurchaseStatus</code></td>
@@ -656,7 +656,35 @@
                         </tr>
                         <tr>
                             <td><code>submitStayApplication</code></td>
-                            <td>Submit a completed application for human review. Rejects with missingFields if incomplete, or a 409 if the Application Fee isn't paid/waived yet</td>
+                            <td>Submit a completed application for human review. Rejects with missingFields if incomplete, or a 409 if the Application Fee (product 8) isn't paid/waived yet</td>
+                            <td>applicationId</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">🧭 Experience Application Tools <span style="font-weight: normal; font-size: 0.85rem; color: #6c757d;">(require an MCP agent token)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>listExperienceApplications</code></td>
+                            <td>List the caller's Experience Applications (draft and submitted), each with a nextAction hint</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getExperienceApplication</code></td>
+                            <td>Get the full current state of one Experience Application, including nextAction and (if incomplete) missingFields</td>
+                            <td>applicationId</td>
+                        </tr>
+                        <tr>
+                            <td><code>createExperienceApplication</code></td>
+                            <td>Start a new Experience Application. Experiences must run a minimum of 4 days (enforced server-side)</td>
+                            <td>All fields optional — see applicant, address, and experience-detail fields</td>
+                        </tr>
+                        <tr>
+                            <td><code>saveExperienceApplication</code></td>
+                            <td>Update any subset of fields on an existing, not-yet-submitted application</td>
+                            <td>applicationId, plus any of the createExperienceApplication fields to change</td>
+                        </tr>
+                        <tr>
+                            <td><code>submitExperienceApplication</code></td>
+                            <td>Submit a completed application for human review. Rejects with missingFields if incomplete, or a 409 if the Application Fee (product 9, NOT product 8) isn't paid/waived yet</td>
                             <td>applicationId</td>
                         </tr>
                     </tbody>
