@@ -27,6 +27,20 @@ Compatible with **Claude**, **ChatGPT**, and any MCP-aware AI agent.
 | `getHelpCenterArticle` | Fetch a specific help article by ID |
 | `listHelpCenterCategories` | List all help centre categories |
 
+## Account signup for AI agents
+
+If the person you're assisting doesn't have a NomadStays account yet, use the `signupNomadStaysAccount` tool to create one for them — no authentication, browser, or CAPTCHA required.
+
+| Tool | Description |
+|---|---|
+| `signupNomadStaysAccount` | Create a new NomadStays account for someone who doesn't have one yet. Returns `pending_email_confirmation` — no session or token. |
+
+Notes:
+
+- The account is created but **inactive** until the human clicks the confirmation link emailed to them — no session or token is returned by this call, and the agent cannot sign in or act as the user itself. This is the trust boundary: it proves a real inbox exists behind the request, standing in for the CAPTCHA/honeypot checks the public browser signup form uses instead.
+- Rate-limited to 2 requests per 5 minutes per source IP, server-side (`Controllers/AgentSignupApiController.cs` in the main repo).
+- Once the human confirms their email and logs in normally at `nomadstays.com/Account/Login`, they can request an MCP bearer token or complete OAuth (see "Trusted stay partner management tools" below) to let their own agent act on their behalf going forward.
+
 ## Trusted stay partner management tools
 
 The tools above are read-only and public. A separate set of tools lets an **authorized trusted stay partner's own AI agent** read AND write their own listing data — with the same capabilities (no more, no less) as they have via the NomadStays admin UI. These require a bearer token issued at `nomadstays.com/siteadmin/mcp-tokens-admin` (2FA must be enabled on the account to request one), set as `NOMADSTAYS_MCP_AGENT_TOKEN`. Every call is scoped server-side to Stays the authenticated account actually owns.
