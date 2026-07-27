@@ -687,6 +687,34 @@
                             <td>Submit a completed application for human review. Rejects with missingFields if incomplete, or a 409 if the Application Fee (product 9, NOT product 8) isn't paid/waived yet</td>
                             <td>applicationId</td>
                         </tr>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">🏢 Coworking Application Tools <span style="font-weight: normal; font-size: 0.85rem; color: #6c757d;">(require an MCP agent token)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>listCoworkingApplications</code></td>
+                            <td>List the caller's Coworking Applications (draft and submitted), each with a nextAction hint</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getCoworkingApplication</code></td>
+                            <td>Get the full current state of one Coworking Application, including nextAction and (if incomplete) missingFields</td>
+                            <td>applicationId</td>
+                        </tr>
+                        <tr>
+                            <td><code>createCoworkingApplication</code></td>
+                            <td>Start a new Coworking Application. Much simpler than Stay/Experience: no VAT/tourism/business-model rules and no Application Fee at all — nextAction goes straight to submit once coworkingName, applicantName, applicantEmail, city and country are present</td>
+                            <td>All fields optional — coworkingName, applicantName, applicantEmail, telephone, address, city, country, website</td>
+                        </tr>
+                        <tr>
+                            <td><code>saveCoworkingApplication</code></td>
+                            <td>Update any subset of fields on an existing, not-yet-submitted application</td>
+                            <td>applicationId, plus any of the createCoworkingApplication fields to change</td>
+                        </tr>
+                        <tr>
+                            <td><code>submitCoworkingApplication</code></td>
+                            <td>Submit a completed application for human review. Rejects with missingFields if incomplete. There is no Application Fee for Coworking, so this never returns a payment-required response</td>
+                            <td>applicationId</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

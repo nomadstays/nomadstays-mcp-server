@@ -34,6 +34,7 @@ const API_BASES = {
   productPayment: "mcp-product-payment",
   stayApplication: "mcp-stay-application",
   experienceApplication: "mcp-experience-application",
+  coworkingApplication: "mcp-coworking-application",
 } as const;
 type ApiBase = keyof typeof API_BASES;
 
@@ -189,9 +190,24 @@ export const mcpAgentClient = {
   reorderRoomPhotos: (stayId: string | number, roomId: string | number, roomArea: string, body: unknown) =>
     call("PATCH", `/stays/${stayId}/rooms/${roomId}/photos/${encodeURIComponent(roomArea)}/order`, body),
 
+  // ── Coworking Application (Controllers/McpCoworkingApplicationApiController.cs) ──
+  // Simpler than the Stay/Experience tools above — mirrors
+  // Pages/applications/apply-to-list-your-coworking-{1,3}.cshtml.cs. No Application Fee, no
+  // purchaseProduct() call needed: nextAction goes straight to "submit" once the required
+  // fields (coworkingName, applicantName, applicantEmail, city, country) are present.
+  listCoworkingApplications: () => call("GET", `/`, undefined, "coworkingApplication"),
+  getCoworkingApplication: (applicationId: string | number) =>
+    call("GET", `/${applicationId}`, undefined, "coworkingApplication"),
+  createCoworkingApplication: (body: unknown) => call("POST", `/`, body, "coworkingApplication"),
+  saveCoworkingApplication: (applicationId: string | number, body: unknown) =>
+    call("PATCH", `/${applicationId}`, body, "coworkingApplication"),
+  submitCoworkingApplication: (applicationId: string | number) =>
+    call("POST", `/${applicationId}/submit`, undefined, "coworkingApplication"),
+
   // ── Product payment (Controllers/McpProductPaymentApiController.cs) ──────
   // Lets the caller buy a tbProducts row (product 8 "Stay Application" or product 9
-  // "Experience Application", both €39) on their own behalf. The agent never touches card
+  // "Experience Application", both €39) on their own behalf. Coworking has no application-fee
+  // product — see the Coworking Application tools above. The agent never touches card
   // data: purchaseProduct returns a checkoutUrl hosted on nomadstays.com that the member
   // must open and pay through themselves; getPurchaseStatus only ever reports "paid" after
   // a fresh server-side re-check against Airwallex, never from a client-supplied claim.

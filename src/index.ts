@@ -148,7 +148,7 @@ function createServer(): Server {
   const server = new Server(
   {
     name: "nomadstays-mcp-server",
-    version: "0.1.0",
+    version: "0.7.0",
   },
   {
     capabilities: {
@@ -1397,6 +1397,63 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return CompatibilityHelper.formatToolResponse(result);
     } catch (err: any) {
       throw new Error(`submitExperienceApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "listCoworkingApplications") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.listCoworkingApplications();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`listCoworkingApplications failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getCoworkingApplication") {
+    const applicationId = request.params.arguments?.applicationId ?? null;
+    if (applicationId == null) throw new Error("Tool 'getCoworkingApplication' requires 'applicationId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getCoworkingApplication(String(applicationId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getCoworkingApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "createCoworkingApplication") {
+    const { applicationId, ...body } = request.params.arguments ?? {};
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.createCoworkingApplication(body);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`createCoworkingApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "saveCoworkingApplication") {
+    const { applicationId, ...body } = request.params.arguments ?? {};
+    if (applicationId == null) throw new Error("Tool 'saveCoworkingApplication' requires 'applicationId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.saveCoworkingApplication(String(applicationId), body);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`saveCoworkingApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "submitCoworkingApplication") {
+    const applicationId = request.params.arguments?.applicationId ?? null;
+    if (applicationId == null) throw new Error("Tool 'submitCoworkingApplication' requires 'applicationId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.submitCoworkingApplication(String(applicationId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`submitCoworkingApplication failed: ${err?.message ?? String(err)}`);
     }
   }
 
@@ -2673,6 +2730,75 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         }
+      },
+
+      {
+        name: "listCoworkingApplications",
+        description: "List the caller's Coworking Applications (draft and submitted), each with a nextAction hint (provide_coworking_details, submit, awaiting_review, or accepted). Coworking has no Application Fee, so unlike Stay/Experience there is no pay_application_fee step. Call this to find an in-progress application's applicationId before resuming it. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: "getCoworkingApplication",
+        description: "Get the full current state of one Coworking Application, including a nextAction hint and (if incomplete) a missingFields list naming exactly which required fields are still empty. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicationId: { type: "number", description: "The application's ID (use listCoworkingApplications to find it)" }
+          },
+          required: ["applicationId"]
+        }
+      },
+      {
+        name: "createCoworkingApplication",
+        description: "Start a new Coworking Application for the caller. Much simpler than the Stay/Experience applications: no VAT/tourism-number/business-model rules, no Application Fee, and no billing step at all — once coworkingName, applicantName, applicantEmail, city and country are present, nextAction goes straight to 'submit'. Call getCountries first to find a valid country name (must be the exact tbCountry.CountryName, not an ID). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            coworkingName: { type: "string" },
+            applicantName: { type: "string" },
+            applicantEmail: { type: "string" },
+            telephone: { type: "string" },
+            address: { type: "string" },
+            city: { type: "string" },
+            country: { type: "string", description: "Exact tbCountry.CountryName (not a country ID) — use getCountries and take the countryName field. Must not be a sanctioned country." },
+            website: { type: "string" }
+          },
+          required: []
+        }
+      },
+      {
+        name: "saveCoworkingApplication",
+        description: "Update any subset of fields on an existing, not-yet-submitted Coworking Application. Same field set and validation rules as createCoworkingApplication — only pass the fields you're changing. Fails with a 409 if the application has already been submitted. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicationId: { type: "number", description: "The application's ID" },
+            coworkingName: { type: "string" },
+            applicantName: { type: "string" },
+            applicantEmail: { type: "string" },
+            telephone: { type: "string" },
+            address: { type: "string" },
+            city: { type: "string" },
+            country: { type: "string", description: "Exact tbCountry.CountryName (not a country ID) — use getCountries." },
+            website: { type: "string" }
+          },
+          required: ["applicationId"]
+        }
+      },
+      {
+        name: "submitCoworkingApplication",
+        description: "Submit a completed Coworking Application for human review. Rejects with a missingFields list if any required field is still empty. There is no Application Fee to pay for Coworking, so — unlike submitStayApplication/submitExperienceApplication — this never returns a pay_application_fee/409-unpaid response. On success the application moves to human review. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicationId: { type: "number", description: "The application's ID" }
+          },
+          required: ["applicationId"]
+        }
       }
     ]
   };
@@ -2762,7 +2888,7 @@ async function main() {
                 status: 'ok', 
                 service: 'nomadstays-mcp-server',
                 timestamp: new Date().toISOString(),
-                version: '0.6.2',
+                version: '0.7.0',
                 transport: 'streamable-http',
                 endpoints: {
                     mcp: '/mcp',
