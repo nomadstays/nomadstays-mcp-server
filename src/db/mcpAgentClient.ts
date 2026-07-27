@@ -24,8 +24,23 @@ import { getRequestAgentToken } from "../tracking/requestTokenContext.js";
 // valid, correctly resource-bound OAuth token but still got rejected.
 const DEFAULT_BASE_URL = "https://www.nomadstays.com/api/mcp-agent";
 
-function getBaseUrl(): string {
-  return (process.env.NOMADSTAYS_MCP_AGENT_BASE_URL ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
+// The web app exposes a few sibling controllers under their own route prefixes rather than
+// api/mcp-agent (Controllers/McpProductPaymentApiController.cs, McpStayApplicationApiController.cs)
+// — same host, same auth scheme/token, just a different path segment. `call()` accepts an
+// optional `base` override so this one client file/module (with its one token-resolution and
+// error-handling implementation) can reach them without a second near-duplicate client.
+const API_BASES = {
+  agent: "mcp-agent",
+  productPayment: "mcp-product-payment",
+  stayApplication: "mcp-stay-application",
+} as const;
+type ApiBase = keyof typeof API_BASES;
+
+function getBaseUrl(base: ApiBase = "agent"): string {
+  const root = (process.env.NOMADSTAYS_MCP_AGENT_BASE_URL ?? DEFAULT_BASE_URL)
+    .replace(/\/+$/, "")
+    .replace(/\/api\/mcp-agent$/, "/api");
+  return base === "agent" ? `${root}/mcp-agent` : `${root}/${API_BASES[base]}`;
 }
 
 function getToken(): string {
@@ -39,8 +54,13 @@ function getToken(): string {
   return token;
 }
 
-async function call(method: "GET" | "POST" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<any> {
-  const response = await fetch(`${getBaseUrl()}${path}`, {
+async function call(
+  method: "GET" | "POST" | "PATCH" | "DELETE",
+  path: string,
+  body?: unknown,
+  base: ApiBase = "agent",
+): Promise<any> {
+  const response = await fetch(`${getBaseUrl(base)}${path}`, {
     method,
     headers: {
       "Authorization": `Bearer ${getToken()}`,
@@ -120,4 +140,35 @@ export const mcpAgentClient = {
     call("DELETE", `/stays/${stayId}/rooms/${roomId}/photos/${encodeURIComponent(roomArea)}/${encodeURIComponent(fileName)}`),
   reorderRoomPhotos: (stayId: string | number, roomId: string | number, roomArea: string, body: unknown) =>
     call("PATCH", `/stays/${stayId}/rooms/${roomId}/photos/${encodeURIComponent(roomArea)}/order`, body),
+
+  // ── Product payment (Controllers/McpProductPaymentApiController.cs) ──────
+  // Lets the caller buy a tbProducts row (currently only product 8, "Stay Application")
+  // on their own behalf. The agent never touches card data: purchaseProduct returns a
+  // checkoutUrl hosted on nomadstays.com that the member must open and pay through
+  // themselves; getPurchaseStatus only ever reports "paid" after a fresh server-side
+  // re-check against Airwallex, never from a client-supplied claim.
+  getProductInfo: (productId: string | number) =>
+    call("GET", `/products/${productId}`, undefined, "productPayment"),
+  purchaseProduct: (productId: string | number, applicationId?: string | number) =>
+    call(
+      "POST",
+      `/products/${productId}/checkout${applicationId != null ? `?applicationId=${applicationId}` : ""}`,
+      undefined,
+      "productPayment",
+    ),
+  getPurchaseStatus: (saleId: string) => call("GET", `/sales/${saleId}/status`, undefined, "productPayment"),
+
+  // ── Stay Application (Controllers/McpStayApplicationApiController.cs) ────
+  // Mirrors Pages/applications/apply-to-list-your-stay-{1..4}.cshtml.cs as one consolidated
+  // create/save/submit surface — see docs/AI_AGENT_STAY_APPLICATION_PLAN.md in nomadstayscom26
+  // for the full design. Billing for the Application Fee goes through the product-payment
+  // tools above (product 8), not a separate payment path here.
+  listStayApplications: () => call("GET", `/`, undefined, "stayApplication"),
+  getStayApplication: (applicationId: string | number) =>
+    call("GET", `/${applicationId}`, undefined, "stayApplication"),
+  createStayApplication: (body: unknown) => call("POST", `/`, body, "stayApplication"),
+  saveStayApplication: (applicationId: string | number, body: unknown) =>
+    call("PATCH", `/${applicationId}`, body, "stayApplication"),
+  submitStayApplication: (applicationId: string | number) =>
+    call("POST", `/${applicationId}/submit`, undefined, "stayApplication"),
 };

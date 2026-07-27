@@ -1224,6 +1224,100 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "getProductInfo") {
+    const productId = request.params.arguments?.productId ?? null;
+    if (productId == null) throw new Error("Tool 'getProductInfo' requires 'productId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getProductInfo(String(productId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getProductInfo failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "purchaseProduct") {
+    const productId = request.params.arguments?.productId ?? null;
+    const applicationId = request.params.arguments?.applicationId ?? undefined;
+    if (productId == null) throw new Error("Tool 'purchaseProduct' requires 'productId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.purchaseProduct(String(productId), applicationId != null ? String(applicationId) : undefined);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`purchaseProduct failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getPurchaseStatus") {
+    const saleId = request.params.arguments?.saleId ?? null;
+    if (!saleId) throw new Error("Tool 'getPurchaseStatus' requires 'saleId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getPurchaseStatus(String(saleId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getPurchaseStatus failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "listStayApplications") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.listStayApplications();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`listStayApplications failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getStayApplication") {
+    const applicationId = request.params.arguments?.applicationId ?? null;
+    if (applicationId == null) throw new Error("Tool 'getStayApplication' requires 'applicationId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getStayApplication(String(applicationId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getStayApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "createStayApplication") {
+    const { applicationId, ...body } = request.params.arguments ?? {};
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.createStayApplication(body);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`createStayApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "saveStayApplication") {
+    const { applicationId, ...body } = request.params.arguments ?? {};
+    if (applicationId == null) throw new Error("Tool 'saveStayApplication' requires 'applicationId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.saveStayApplication(String(applicationId), body);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`saveStayApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "submitStayApplication") {
+    const applicationId = request.params.arguments?.applicationId ?? null;
+    if (applicationId == null) throw new Error("Tool 'submitStayApplication' requires 'applicationId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.submitStayApplication(String(applicationId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`submitStayApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   throw new Error("Unknown tool");
 });
 
@@ -2235,6 +2329,142 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["stayId", "area", "fileNames"]
+        }
+      },
+
+      {
+        name: "getProductInfo",
+        description: "Look up a Nomad Stays product's price and purchasability — currently only product 8, the Stay Application fee (EUR 39). Returns isWaivedForCaller: true if the caller is already a Stay Partner re-applying, in which case there's nothing to pay and purchaseProduct will process the waiver automatically. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            productId: { type: "number", description: "The product's EntryID — use 8 for the Stay Application fee" }
+          },
+          required: ["productId"]
+        }
+      },
+      {
+        name: "purchaseProduct",
+        description: "Start a purchase of a Nomad Stays product on the caller's own behalf. If the caller already qualifies for a waiver (e.g. an existing Stay Partner re-applying), this resolves immediately with no payment step and returns status 'waived'. Otherwise it returns a checkoutUrl hosted on nomadstays.com — you must hand this URL to the member and ask them to open it in their own browser and pay; you cannot complete payment on their behalf. Poll getPurchaseStatus with the returned saleId afterwards to find out when it's actually paid. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            productId: { type: "number", description: "The product's EntryID — use 8 for the Stay Application fee" },
+            applicationId: { type: "number", description: "Optional: if this purchase is paying a Stay Application's fee, pass its applicationId (from createStayApplication) so the payment is applied back to that application automatically once paid" }
+          },
+          required: ["productId"]
+        }
+      },
+      {
+        name: "getPurchaseStatus",
+        description: "Check whether a purchase has been paid. Only ever reports 'paid' after a fresh server-side check against the payment provider — never trust the member's own claim that they've paid, always poll this instead. Possible statuses: pending, paid, failed, waived. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            saleId: { type: "string", description: "The saleId returned by purchaseProduct" }
+          },
+          required: ["saleId"]
+        }
+      },
+
+      {
+        name: "listStayApplications",
+        description: "List the caller's Stay Applications (draft and submitted), each with a nextAction hint telling you what's needed next (provide_applicant_details, provide_property_details, pay_application_fee, submit, awaiting_review, or accepted). Call this to find an in-progress application's applicationId before resuming it. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: "getStayApplication",
+        description: "Get the full current state of one Stay Application, including a nextAction hint and (if incomplete) a missingFields list naming exactly which required fields are still empty. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicationId: { type: "number", description: "The application's ID (use listStayApplications to find it)" }
+          },
+          required: ["applicationId"]
+        }
+      },
+      {
+        name: "createStayApplication",
+        description: "Start a new Stay Application for the caller. Any fields can be supplied now or filled in later via saveStayApplication — the applicant's name defaults from their Nomad Stays profile if not supplied. Call getCountries and getBusinessModels first to resolve stayCountryId/postalCountryId/businessModelId, since country-specific rules (VAT number, tourism number, permitted business models) are enforced server-side and rejections name the specific field/reason. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicantFirstName: { type: "string", description: "Overrides the profile default for this application only — does not change the member's profile" },
+            applicantLastName: { type: "string", description: "Overrides the profile default for this application only — does not change the member's profile" },
+            applicantEmail: { type: "string" },
+            mobile: { type: "string" },
+            businessName: { type: "string" },
+            street: { type: "string" },
+            city: { type: "string" },
+            state: { type: "string" },
+            zip: { type: "string" },
+            postalCountryId: { type: "number", description: "tbCountry.CountryId for the applicant's billing/postal address — used only to check whether a VAT number is required, and stored on the member's business profile (not on the application itself). Use getCountries to find a value." },
+            vatNumber: { type: "string", description: "Required if the postal country's vatNumberRequired flag is true (see getCountries)" },
+            stayName: { type: "string" },
+            stayCountryId: { type: "number", description: "tbCountry.CountryId for where the Stay is actually located — this is the country the application itself is filed under. Use getCountries to find a value." },
+            tourismNumber: { type: "string", description: "Required if the stay country's tourismNumberRequired flag is true (see getCountries)" },
+            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModels. If the stay country's bookingModelsRestricted flag is true, only a 'StayDirect'-prefixed model is accepted." },
+            monthlyPrice: { type: "string" },
+            availabilitySupplier: { type: "string" },
+            hasKitchen: { type: "boolean" },
+            laundryFacilities: { type: "string", enum: ["No", "On Premises", "Nearby"] },
+            workFacilities: { type: "string", enum: ["None", "Both", "In Room", "CoWorking Space"] },
+            downloadSpeed: { type: "string" },
+            numberOfRooms: { type: "string" },
+            website: { type: "string" },
+            comments: { type: "string" }
+          },
+          required: []
+        }
+      },
+      {
+        name: "saveStayApplication",
+        description: "Update any subset of fields on an existing, not-yet-submitted Stay Application. Same field set and validation rules as createStayApplication — only pass the fields you're changing. Fails with a 409 if the application has already been submitted. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicationId: { type: "number", description: "The application's ID" },
+            applicantFirstName: { type: "string" },
+            applicantLastName: { type: "string" },
+            applicantEmail: { type: "string" },
+            mobile: { type: "string" },
+            businessName: { type: "string" },
+            street: { type: "string" },
+            city: { type: "string" },
+            state: { type: "string" },
+            zip: { type: "string" },
+            postalCountryId: { type: "number", description: "tbCountry.CountryId — used only for the VAT check, stored on the business profile, not on the application. Use getCountries." },
+            vatNumber: { type: "string" },
+            stayName: { type: "string" },
+            stayCountryId: { type: "number", description: "tbCountry.CountryId — the country the application itself is filed under. Use getCountries." },
+            tourismNumber: { type: "string" },
+            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModels." },
+            monthlyPrice: { type: "string" },
+            availabilitySupplier: { type: "string" },
+            hasKitchen: { type: "boolean" },
+            laundryFacilities: { type: "string", enum: ["No", "On Premises", "Nearby"] },
+            workFacilities: { type: "string", enum: ["None", "Both", "In Room", "CoWorking Space"] },
+            downloadSpeed: { type: "string" },
+            numberOfRooms: { type: "string" },
+            website: { type: "string" },
+            comments: { type: "string" }
+          },
+          required: ["applicationId"]
+        }
+      },
+      {
+        name: "submitStayApplication",
+        description: "Submit a completed Stay Application for human review. Rejects with a missingFields list if any required field is still empty, or a 409 if the Application Fee hasn't been paid/waived yet (call purchaseProduct with productId 8 and applicationId first). There is no partial/optimistic submission — everything required must already be in place. On success the application moves to human review; nothing further is needed from the agent. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicationId: { type: "number", description: "The application's ID" }
+          },
+          required: ["applicationId"]
         }
       }
 
