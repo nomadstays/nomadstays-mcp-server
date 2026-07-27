@@ -613,6 +613,52 @@
                             <td>Reorder a room's photos within a given area</td>
                             <td>stayId, roomId, roomArea, fileNames (full ordered list)</td>
                         </tr>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">💳 Product Payment Tools <span style="font-weight: normal; font-size: 0.85rem; color: #6c757d;">(require an MCP agent token)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>getProductInfo</code></td>
+                            <td>Look up a product's price and purchasability — currently only product 8, the Stay Application fee (EUR 39)</td>
+                            <td>productId</td>
+                        </tr>
+                        <tr>
+                            <td><code>purchaseProduct</code></td>
+                            <td>Start a purchase on the caller's own behalf. Returns a checkoutUrl the member must open and pay themselves, or resolves immediately as "waived" if the caller already qualifies for a fee waiver</td>
+                            <td>productId, applicationId (optional — correlates the payment to a Stay Application)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getPurchaseStatus</code></td>
+                            <td>Check whether a purchase has been paid — only ever reports "paid" after a fresh server-side check against the payment provider</td>
+                            <td>saleId</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">📋 Stay Application Tools <span style="font-weight: normal; font-size: 0.85rem; color: #6c757d;">(require an MCP agent token)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>listStayApplications</code></td>
+                            <td>List the caller's Stay Applications (draft and submitted), each with a nextAction hint</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStayApplication</code></td>
+                            <td>Get the full current state of one Stay Application, including nextAction and (if incomplete) missingFields</td>
+                            <td>applicationId</td>
+                        </tr>
+                        <tr>
+                            <td><code>createStayApplication</code></td>
+                            <td>Start a new Stay Application. Any fields can be supplied now or filled in later via saveStayApplication</td>
+                            <td>All fields optional — see applicant, address, stay, and property fields below</td>
+                        </tr>
+                        <tr>
+                            <td><code>saveStayApplication</code></td>
+                            <td>Update any subset of fields on an existing, not-yet-submitted application</td>
+                            <td>applicationId, plus any of the createStayApplication fields to change</td>
+                        </tr>
+                        <tr>
+                            <td><code>submitStayApplication</code></td>
+                            <td>Submit a completed application for human review. Rejects with missingFields if incomplete, or a 409 if the Application Fee isn't paid/waived yet</td>
+                            <td>applicationId</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
