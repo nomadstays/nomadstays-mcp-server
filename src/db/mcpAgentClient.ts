@@ -33,6 +33,7 @@ const API_BASES = {
   agent: "mcp-agent",
   productPayment: "mcp-product-payment",
   stayApplication: "mcp-stay-application",
+  experienceApplication: "mcp-experience-application",
 } as const;
 type ApiBase = keyof typeof API_BASES;
 
@@ -69,20 +70,67 @@ async function call(
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
+  return handleResponse(response);
+}
+
+// Site root (not /api/mcp-agent) for the handful of endpoints that exist precisely because no
+// token can exist yet — account signup — so they can't go through call()'s getToken() above,
+// which throws when there's nothing to authenticate with.
+function getSiteRoot(): string {
+  return (process.env.NOMADSTAYS_MCP_AGENT_BASE_URL ?? DEFAULT_BASE_URL)
+    .replace(/\/+$/, "")
+    .replace(/\/api\/mcp-agent$/, "");
+}
+
+async function callAnonymous(method: "GET" | "POST", path: string, body?: unknown): Promise<any> {
+  const response = await fetch(`${getSiteRoot()}${path}`, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+
+  return handleResponse(response);
+}
+
+async function handleResponse(response: Response): Promise<any> {
   if (response.status === 204) return null;
 
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+  let data: any = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Some endpoints (e.g. the rate limiter's rejection handler) reply with a plain-text
+      // body instead of JSON — surface it as-is rather than throwing a confusing parse error.
+      if (!response.ok) throw new Error(text || `Request failed with status ${response.status}`);
+      data = text;
+    }
+  }
 
   if (!response.ok) {
-    const message = data?.error ?? `Request failed with status ${response.status}`;
-    throw new Error(message);
+    const message = data?.error ?? data?.errors ?? `Request failed with status ${response.status}`;
+    throw new Error(typeof message === "string" ? message : JSON.stringify(message));
   }
 
   return data;
 }
 
 export const mcpAgentClient = {
+  // ── Account signup (Controllers/AgentSignupApiController.cs) ────────────
+  // No token exists yet at this point — that's the entire reason this tool exists — so it
+  // calls the site directly (callAnonymous) instead of going through the bearer-token call()
+  // used by every other method here. Creates an inactive account; the human still has to
+  // click the emailed confirmation link before it's usable, and no session/token is returned.
+  signUp: (body: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    telephone: string;
+    password: string;
+    acceptGdpr: boolean;
+  }) => callAnonymous("POST", `/api/agent-signup`, body),
+
   getMyStays: () => call("GET", `/stays`),
   getStayDetail: (stayId: string | number) => call("GET", `/stays/${stayId}`),
   patchStayDetail: (stayId: string | number, body: unknown) => call("PATCH", `/stays/${stayId}`, body),
@@ -142,11 +190,11 @@ export const mcpAgentClient = {
     call("PATCH", `/stays/${stayId}/rooms/${roomId}/photos/${encodeURIComponent(roomArea)}/order`, body),
 
   // ── Product payment (Controllers/McpProductPaymentApiController.cs) ──────
-  // Lets the caller buy a tbProducts row (currently only product 8, "Stay Application")
-  // on their own behalf. The agent never touches card data: purchaseProduct returns a
-  // checkoutUrl hosted on nomadstays.com that the member must open and pay through
-  // themselves; getPurchaseStatus only ever reports "paid" after a fresh server-side
-  // re-check against Airwallex, never from a client-supplied claim.
+  // Lets the caller buy a tbProducts row (product 8 "Stay Application" or product 9
+  // "Experience Application", both €39) on their own behalf. The agent never touches card
+  // data: purchaseProduct returns a checkoutUrl hosted on nomadstays.com that the member
+  // must open and pay through themselves; getPurchaseStatus only ever reports "paid" after
+  // a fresh server-side re-check against Airwallex, never from a client-supplied claim.
   getProductInfo: (productId: string | number) =>
     call("GET", `/products/${productId}`, undefined, "productPayment"),
   purchaseProduct: (productId: string | number, applicationId?: string | number) =>
@@ -171,4 +219,18 @@ export const mcpAgentClient = {
     call("PATCH", `/${applicationId}`, body, "stayApplication"),
   submitStayApplication: (applicationId: string | number) =>
     call("POST", `/${applicationId}/submit`, undefined, "stayApplication"),
+
+  // ── Experience Application (Controllers/McpExperienceApplicationApiController.cs) ─
+  // Same consolidated create/save/submit pattern as the Stay Application tools above —
+  // mirrors Pages/applications/apply-to-list-your-experience-{1..4}.cshtml.cs. Billing goes
+  // through purchaseProduct(9, applicationId), NOT product 8 — Experience has its own
+  // Application Fee product so Pumble/email notifications carry the correct product name.
+  listExperienceApplications: () => call("GET", `/`, undefined, "experienceApplication"),
+  getExperienceApplication: (applicationId: string | number) =>
+    call("GET", `/${applicationId}`, undefined, "experienceApplication"),
+  createExperienceApplication: (body: unknown) => call("POST", `/`, body, "experienceApplication"),
+  saveExperienceApplication: (applicationId: string | number, body: unknown) =>
+    call("PATCH", `/${applicationId}`, body, "experienceApplication"),
+  submitExperienceApplication: (applicationId: string | number) =>
+    call("POST", `/${applicationId}/submit`, undefined, "experienceApplication"),
 };

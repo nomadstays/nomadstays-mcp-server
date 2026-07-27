@@ -182,6 +182,31 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         throw new Error(`DB query failed: ${err?.message ?? String(err)}`);
       }
     }
+  if (request.params.name === "signupNomadStaysAccount") {
+    const args = request.params.arguments ?? {};
+    const required = ["firstName", "lastName", "email", "telephone", "password", "acceptGdpr"] as const;
+    for (const field of required) {
+      if (args[field] === undefined || args[field] === null || args[field] === "") {
+        throw new Error(`Tool 'signupNomadStaysAccount' requires '${field}' argument`);
+      }
+    }
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.signUp({
+        firstName: String(args.firstName),
+        lastName: String(args.lastName),
+        email: String(args.email),
+        telephone: String(args.telephone),
+        password: String(args.password),
+        acceptGdpr: Boolean(args.acceptGdpr),
+      });
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`signupNomadStaysAccount failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   if (request.params.name === "getStaysByCountry") {
     // Validate required parameter
     const countrycode = request.params.arguments?.countrycode;
@@ -1318,6 +1343,63 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "listExperienceApplications") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.listExperienceApplications();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`listExperienceApplications failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getExperienceApplication") {
+    const applicationId = request.params.arguments?.applicationId ?? null;
+    if (applicationId == null) throw new Error("Tool 'getExperienceApplication' requires 'applicationId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getExperienceApplication(String(applicationId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getExperienceApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "createExperienceApplication") {
+    const { applicationId, ...body } = request.params.arguments ?? {};
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.createExperienceApplication(body);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`createExperienceApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "saveExperienceApplication") {
+    const { applicationId, ...body } = request.params.arguments ?? {};
+    if (applicationId == null) throw new Error("Tool 'saveExperienceApplication' requires 'applicationId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.saveExperienceApplication(String(applicationId), body);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`saveExperienceApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "submitExperienceApplication") {
+    const applicationId = request.params.arguments?.applicationId ?? null;
+    if (applicationId == null) throw new Error("Tool 'submitExperienceApplication' requires 'applicationId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.submitExperienceApplication(String(applicationId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`submitExperienceApplication failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   throw new Error("Unknown tool");
 });
 
@@ -1451,6 +1533,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         }
       },
 
+      {
+        name: "signupNomadStaysAccount",
+        description: "Creates a new NomadStays account on behalf of a person who does not have one yet. No authentication required — this is how an AI agent gets a person started. The account is created but inactive until the person clicks the confirmation link sent to their email; this call returns no session or token, so the agent cannot sign in or act as the user itself. Once confirmed, the person can log in at nomadstays.com/Account/Login and request their own MCP bearer token or OAuth grant to let an agent manage their account/listings going forward.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            firstName: { type: "string", description: "The person's first name" },
+            lastName: { type: "string", description: "The person's last name" },
+            email: { type: "string", description: "A real email address the person controls — the confirmation link is sent here and the account stays inactive until it's clicked" },
+            telephone: { type: "string", description: "Contact telephone number" },
+            password: { type: "string", description: "Account password, minimum 6 characters" },
+            acceptGdpr: { type: "boolean", description: "Must be true — the person has agreed to NomadStays' GDPR terms" }
+          },
+          required: ["firstName", "lastName", "email", "telephone", "password", "acceptGdpr"]
+        }
+      },
       {
         name: "getStaysByCountry",
         description: "Returns stays from NomadStays Azure backend. Search by 2-letter country code (e.g., 'MA', 'US') or country name (e.g., 'Antigua' matches 'Antigua and Barbuda')",
@@ -2466,8 +2564,116 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         }
-      }
+      },
 
+      {
+        name: "listExperienceApplications",
+        description: "List the caller's Experience Applications (draft and submitted), each with a nextAction hint telling you what's needed next (provide_applicant_details, provide_experience_details, pay_application_fee, submit, awaiting_review, or accepted). Call this to find an in-progress application's applicationId before resuming it. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: "getExperienceApplication",
+        description: "Get the full current state of one Experience Application, including a nextAction hint and (if incomplete) a missingFields list naming exactly which required fields are still empty. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicationId: { type: "number", description: "The application's ID (use listExperienceApplications to find it)" }
+          },
+          required: ["applicationId"]
+        }
+      },
+      {
+        name: "createExperienceApplication",
+        description: "Start a new Experience Application for the caller. Any fields can be supplied now or filled in later via saveExperienceApplication — the applicant's name defaults from their Nomad Stays profile if not supplied. Call getCountries and getBusinessModels first to resolve experienceCountryId/postalCountryId/businessModelId, since country-specific rules (VAT number, tourism number, permitted business models) are enforced server-side and rejections name the specific field/reason. Experiences must run a minimum of 4 days. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicantFirstName: { type: "string", description: "Overrides the profile default for this application only — does not change the member's profile" },
+            applicantLastName: { type: "string", description: "Overrides the profile default for this application only — does not change the member's profile" },
+            applicantEmail: { type: "string" },
+            mobile: { type: "string" },
+            businessName: { type: "string" },
+            street: { type: "string" },
+            city: { type: "string" },
+            state: { type: "string" },
+            zip: { type: "string" },
+            postalCountryId: { type: "number", description: "tbCountry.CountryId for the applicant's billing/postal address — used only to check whether a VAT number is required, and stored on the member's business profile (not on the application itself). Use getCountries to find a value." },
+            vatNumber: { type: "string", description: "Required if the postal country's vatNumberRequired flag is true (see getCountries)" },
+            experienceName: { type: "string" },
+            experienceCountryId: { type: "number", description: "tbCountry.CountryId for where the experience actually takes place — this is the country the application itself is filed under. Use getCountries to find a value." },
+            tourismNumber: { type: "string", description: "Required if the experience country's tourismNumberRequired flag is true (see getCountries)" },
+            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModels. If the experience country's bookingModelsRestricted flag is true, only a 'StayDirect'-prefixed model is accepted." },
+            monthlyPrice: { type: "string", description: "Price per person (USD)" },
+            hasInsurance: { type: "boolean" },
+            availabilitySupplier: { type: "string" },
+            hasKitchen: { type: "boolean" },
+            laundryFacilities: { type: "string", enum: ["No", "On Premises", "Nearby"] },
+            workFacilities: { type: "string", enum: ["None", "Both", "In Room", "CoWorking Space"] },
+            downloadSpeed: { type: "string" },
+            description: { type: "string" },
+            daysQty: { type: "string", description: "Minimum 4 days, enforced server-side" },
+            maxPax: { type: "string", description: "Maximum participants" },
+            overnightLocationsQty: { type: "string" },
+            website: { type: "string" },
+            comments: { type: "string" }
+          },
+          required: []
+        }
+      },
+      {
+        name: "saveExperienceApplication",
+        description: "Update any subset of fields on an existing, not-yet-submitted Experience Application. Same field set and validation rules as createExperienceApplication — only pass the fields you're changing. Fails with a 409 if the application has already been submitted. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicationId: { type: "number", description: "The application's ID" },
+            applicantFirstName: { type: "string" },
+            applicantLastName: { type: "string" },
+            applicantEmail: { type: "string" },
+            mobile: { type: "string" },
+            businessName: { type: "string" },
+            street: { type: "string" },
+            city: { type: "string" },
+            state: { type: "string" },
+            zip: { type: "string" },
+            postalCountryId: { type: "number", description: "tbCountry.CountryId — used only for the VAT check, stored on the business profile, not on the application. Use getCountries." },
+            vatNumber: { type: "string" },
+            experienceName: { type: "string" },
+            experienceCountryId: { type: "number", description: "tbCountry.CountryId — the country the application itself is filed under. Use getCountries." },
+            tourismNumber: { type: "string" },
+            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModels." },
+            monthlyPrice: { type: "string" },
+            hasInsurance: { type: "boolean" },
+            availabilitySupplier: { type: "string" },
+            hasKitchen: { type: "boolean" },
+            laundryFacilities: { type: "string", enum: ["No", "On Premises", "Nearby"] },
+            workFacilities: { type: "string", enum: ["None", "Both", "In Room", "CoWorking Space"] },
+            downloadSpeed: { type: "string" },
+            description: { type: "string" },
+            daysQty: { type: "string", description: "Minimum 4 days, enforced server-side" },
+            maxPax: { type: "string" },
+            overnightLocationsQty: { type: "string" },
+            website: { type: "string" },
+            comments: { type: "string" }
+          },
+          required: ["applicationId"]
+        }
+      },
+      {
+        name: "submitExperienceApplication",
+        description: "Submit a completed Experience Application for human review. Rejects with a missingFields list if any required field is still empty, or a 409 if the Application Fee hasn't been paid/waived yet (call purchaseProduct with productId 9 and applicationId first — Experience uses product 9, NOT product 8). There is no partial/optimistic submission. On success the application moves to human review. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            applicationId: { type: "number", description: "The application's ID" }
+          },
+          required: ["applicationId"]
+        }
+      }
     ]
   };
   });
