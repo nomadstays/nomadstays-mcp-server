@@ -146,7 +146,7 @@ Copy `claude_desktop_config.example.json`, update the path and connection string
 
 ## Deploy
 
-The production NomadStays deployment runs its MCP servers as Docker containers on **Coolify** (self-hosted on Hetzner) rather than Azure App Service. This repo doesn't include a Dockerfile of its own — containerize it with a standard Node.js build (Node 20+, `npm run build`, run `dist/index.js`) and deploy to any Docker-capable host, setting `NOMADSTAYS_DB_CONNECTION` (and `PORT`/`HTTP_PORT` for HTTP mode) as environment variables on the target platform.
+The production Nomad Stays deployment runs its MCP servers as Docker containers on **Coolify** (self-hosted on Hetzner) rather than Azure App Service. This repo doesn't include a Dockerfile of its own — containerize it with a standard Node.js build (Node 20+, `npm run build`, run `dist/index.js`) and deploy to any Docker-capable host, setting `NOMADSTAYS_DB_CONNECTION` (and `PORT`/`HTTP_PORT` for HTTP mode) as environment variables on the target platform.
 
 ## Tech stack
 
