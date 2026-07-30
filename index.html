@@ -598,7 +598,7 @@
                         </tr>
                         <tr>
                             <td><code>uploadStayPhoto</code></td>
-                            <td>Upload a photo to a Stay's listing, main, workspace, host, or room photo area. Supply a public https:// URL <em>or</em> base64-encoded bytes. Every photo is validated for JPEG format, size, minimum resolution (1920×1080 landscape, or 1080×1920 portrait for the "host" area) and is re-encoded server-side before storage</td>
+                            <td>Upload a photo to a Stay's listing, main, workspace, host, or room photo area. Supply a public https:// URL <em>or</em> base64-encoded bytes. Every photo is validated for JPEG/PNG/WebP format, size (up to 20MB), minimum resolution (1920×1080 landscape, or 1080×1350 portrait for the "host" area), and is downscaled to fit 2560×1440 and re-encoded as WebP server-side before storage</td>
                             <td>stayId, area, url or base64, roomId (required when area is "room")</td>
                         </tr>
                         <tr>

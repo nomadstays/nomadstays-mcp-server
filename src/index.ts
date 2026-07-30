@@ -2317,7 +2317,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
       {
         name: "uploadStayPhoto",
-        description: "Upload a photo to one of your Stay's photo areas. Supply EXACTLY ONE of 'url' (a public https:// link, e.g. a Google Drive or Dropbox share link — the server downloads it) or 'base64' (the raw image bytes, base64-encoded — use this when you already have the image data in hand, e.g. a user attached a photo in the conversation, and have nowhere public to host it first). The photo is validated against the same minimum specs as a manual upload: JPEG only, under 5MB, and a minimum resolution that depends on area. Most areas require at least 1920x1080 landscape; 'host' requires at least 1080x1920 PORTRAIT — a landscape photo will be rejected for that area. Every upload is also fully re-encoded server-side (stripping metadata and anything that isn't genuine image data) before storage. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        description: "Upload a photo to one of your Stay's photo areas. Supply EXACTLY ONE of 'url' (a public https:// link, e.g. a Google Drive or Dropbox share link — the server downloads it) or 'base64' (the raw image bytes, base64-encoded — use this when you already have the image data in hand, e.g. a user attached a photo in the conversation, and have nowhere public to host it first). The photo is validated against the same minimum specs as a manual upload: JPEG, PNG, or WebP, under 20MB, and a minimum resolution that depends on area. Most areas require at least 1920x1080 landscape; 'host' requires at least 1080x1350 PORTRAIT — a landscape photo will be rejected for that area. Every upload is downscaled to fit within 2560x1440 and re-encoded server-side as WebP (stripping metadata and anything that isn't genuine image data) before storage. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: {
           type: "object",
           properties: {
@@ -2330,11 +2330,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 "- 'listing': general Stay gallery photos (multiple allowed, min 1920x1080 landscape)\n" +
                 "- 'main': the single hero/cover photo shown first for the Stay (min 1920x1080 landscape, replaces any existing main photo)\n" +
                 "- 'workspace': coworking/workspace photos for the whole Stay (multiple allowed, min 1920x1080 landscape)\n" +
-                "- 'host': a photo of the HOST/CONTACT PERSON, not the property — must be PORTRAIT orientation, min 1080x1920 (replaces any existing host photo)\n" +
+                "- 'host': a photo of the HOST/CONTACT PERSON, not the property — must be PORTRAIT orientation, min 1080x1350 (replaces any existing host photo)\n" +
                 "- 'room': photos for one specific room — requires roomId (multiple allowed, min 1920x1080 landscape)"
             },
             url: { type: "string", description: "A public https:// URL the server can download the image from (e.g. a Google Drive or Dropbox share link). Supply this OR base64, not both." },
-            base64: { type: "string", description: "Base64-encoded JPEG image bytes (a data:image/jpeg;base64,... URI prefix is also accepted and stripped automatically). Supply this OR url, not both. Under ~6.7MB encoded (5MB image)." },
+            base64: { type: "string", description: "Base64-encoded JPEG, PNG, or WebP image bytes (a data:image/...;base64,... URI prefix is also accepted and stripped automatically). Supply this OR url, not both. Under ~27MB encoded (20MB image)." },
             roomId: { type: "number", description: "Required when area is 'room' — the room's EntryID (use getMyStayRooms to find it). Ignored for other areas." }
           },
           required: ["stayId", "area"]
@@ -2828,9 +2828,9 @@ async function main() {
       app.set('trust proxy', true);
         
         // JSON body parser middleware
-        // 10mb accommodates uploadStayPhoto's base64 payloads: a 5MB image (the app's own
-        // max) becomes ~6.7MB once base64-encoded, plus JSON/field overhead.
-        app.use(express.json({ limit: '10mb' }));
+        // 27mb accommodates uploadStayPhoto's base64 payloads: a 20MB image (the app's own
+        // max) becomes ~27MB once base64-encoded, plus JSON/field overhead.
+        app.use(express.json({ limit: '27mb' }));
         
         // Initialize request logger for tracking AI Agent visits
         const connectionString = process.env.NOMADSTAYS_DB_CONNECTION || '';
