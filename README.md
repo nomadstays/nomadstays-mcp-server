@@ -6,6 +6,10 @@ Compatible with **Claude**, **ChatGPT**, and any MCP-aware AI agent.
 
 ## Tools available
 
+Full, current tool list: 72 tools total. See [mcp.nomadstays.com](https://mcp.nomadstays.com) for the complete reference with parameters — this README lists them grouped by category; keep both in sync when tools are added or changed.
+
+### Search, availability, and reference (public, no auth)
+
 | Tool | Description |
 |---|---|
 | `getStaysByCountry` | Search stays by 2-letter country code or country name |
@@ -23,27 +27,40 @@ Compatible with **Claude**, **ChatGPT**, and any MCP-aware AI agent.
 | `getAvailabilityByMonth` | All available windows in a specific month |
 | `getRoomAvailability` | Per-room availability for a date range |
 | `getRoomAmenities` | Full amenity list for a specific room including WiFi metrics |
-| `searchHelpCenter` | Search NomadStays help centre articles |
+| `searchHelpCenter` | Search Nomad Stays help centre articles |
 | `getHelpCenterArticle` | Fetch a specific help article by ID |
 | `listHelpCenterCategories` | List all help centre categories |
 
-## Account signup for AI agents
+### Account signup for AI agents
 
-If the person you're assisting doesn't have a NomadStays account yet, use the `signupNomadStaysAccount` tool to create one for them — no authentication, browser, or CAPTCHA required.
+If the person you're assisting doesn't have a Nomad Stays account yet, use the `signupNomadStaysAccount` tool to create one for them — no authentication, browser, or CAPTCHA required.
 
 | Tool | Description |
 |---|---|
-| `signupNomadStaysAccount` | Create a new NomadStays account for someone who doesn't have one yet. Returns `pending_email_confirmation` — no session or token. |
+| `signupNomadStaysAccount` | Create a new Nomad Stays account for someone who doesn't have one yet. Returns `pending_email_confirmation` — no session or token. |
 
 Notes:
 
 - The account is created but **inactive** until the human clicks the confirmation link emailed to them — no session or token is returned by this call, and the agent cannot sign in or act as the user itself. This is the trust boundary: it proves a real inbox exists behind the request, standing in for the CAPTCHA/honeypot checks the public browser signup form uses instead.
 - Rate-limited to 2 requests per 5 minutes per source IP, server-side (`Controllers/AgentSignupApiController.cs` in the main repo).
-- Once the human confirms their email and logs in normally at `nomadstays.com/Account/Login`, they can request an MCP bearer token or complete OAuth (see "Trusted stay partner management tools" below) to let their own agent act on their behalf going forward.
+- Once the human confirms their email and logs in normally at `www.nomadstays.com/Account/Login`, they can request an MCP bearer token or complete OAuth (see "Trusted Stay Partner management tools" below) to let their own agent act on their behalf going forward.
 
-## Trusted stay partner management tools
+### Product, purchase, and application tools (require an MCP agent token)
 
-The tools above are read-only and public. A separate set of tools lets an **authorized trusted stay partner's own AI agent** read AND write their own listing data — with the same capabilities (no more, no less) as they have via the NomadStays admin UI. These require a bearer token issued at `nomadstays.com/siteadmin/mcp-tokens-admin` (2FA must be enabled on the account to request one), set as `NOMADSTAYS_MCP_AGENT_TOKEN`. Every call is scoped server-side to Stays the authenticated account actually owns.
+Stay, Experience, and Coworking applications each go through the same `list` / `get` / `create` / `save` / `submit` lifecycle. Stay and Experience applications carry a one-time EUR 39 Application Fee (products 8 and 9); Coworking applications have no fee.
+
+| Tool | Description |
+|---|---|
+| `getProductInfo` | Look up a product's price and purchasability (product 8 = Stay Application, 9 = Experience Application) |
+| `purchaseProduct` | Start a purchase on the caller's own behalf; returns a `checkoutUrl` or resolves as "waived" |
+| `getPurchaseStatus` | Check whether a purchase has been paid, verified fresh against the payment provider |
+| `listStayApplications` / `getStayApplication` / `createStayApplication` / `saveStayApplication` / `submitStayApplication` | Full Stay Application lifecycle |
+| `listExperienceApplications` / `getExperienceApplication` / `createExperienceApplication` / `saveExperienceApplication` / `submitExperienceApplication` | Full Experience Application lifecycle (min. 4-day experiences, enforced server-side) |
+| `listCoworkingApplications` / `getCoworkingApplication` / `createCoworkingApplication` / `saveCoworkingApplication` / `submitCoworkingApplication` | Full Coworking Application lifecycle — no Application Fee |
+
+## Trusted Stay Partner management tools
+
+The tools above are read-only and public (aside from applications, which are self-service but still token-gated). A separate set of tools lets an **authorized Trusted Stay Partner's own AI agent** read AND write their own listing data — with the same capabilities (no more, no less) as they have via the Nomad Stays admin UI. These require a bearer token issued from the partner's Operator Information page at `www.nomadstays.com/stayadmin/user-profile-stays` (2FA must be enabled on the account to request one), set as `NOMADSTAYS_MCP_AGENT_TOKEN`. Every call is scoped server-side to Stays the authenticated account actually owns.
 
 | Tool | Description |
 |---|---|
@@ -59,9 +76,9 @@ The tools above are read-only and public. A separate set of tools lets an **auth
 | `getStayTypeOptions` / `getCountryOptions` / `getCancellationPolicyOptions` / `getAdditionalInformationOptions` | Reference lookups for organisational-data fields |
 | `getMyStayContacts` / `updateStayContacts` | Public-facing contact details |
 | `getMyStayFacilities` / `updateStayFacilities` / `getFacilityGroups` | Facility checkboxes, grouped exactly as on the admin UI |
-| `getMyBusinessProfile` / `updateHostBusinessProfile` | Business profile (excludes bank/tax fields — never exposed via MCP) |
+| `getMyBusinessProfile` / `updateHostBusinessProfile` | Business profile (excludes personal, bank, and tax fields — never exposed via MCP) |
 
-Key rules: boutique Stays (`Boutique1`–`Boutique6` room types) and standard Stays are validated separately — always call `getRoomTypeOptions` first. Package price tiers are locked to 7/14/21/30 nights and don't all need to be set — a subset (e.g. 1-week-only) is valid. `advertisingEndpoint` only applies to Advertising-business-model Stays. Bank and tax details are permanently excluded from every tool.
+Key rules: boutique Stays (`Boutique1`–`Boutique6` room types) and standard Stays are validated separately — always call `getRoomTypeOptions` first. Package price tiers are locked to 7/14/21/30 nights and don't all need to be set — a subset (e.g. 1-week-only) is valid. `advertisingEndpoint` only applies to Advertising-business-model Stays. Personal, bank, and tax details are permanently excluded from every tool.
 
 ## Setup
 

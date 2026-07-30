@@ -2,6 +2,7 @@
   "name": "nomadstays-mcp-server",
   "version": "0.7.0",
   "description": "A Model Context Protocol server",
+  "license": "BSD-3-Clause",
   "private": true,
   "type": "module",
   "bin": {
