@@ -1,12 +1,14 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.nomadstays/mcp-server",
-  "description": "AI agent access to NomadStays accommodation search, availability, and help center data.",
+  "name": "io.github.nomadstays/nomadstays-mcp-server",
+  "title": "Nomad Stays",
+  "description": "Search remote-work accommodations worldwide and, for authenticated Trusted Stay Partners, manage their own listings.",
+  "version": "0.7.0",
+  "websiteUrl": "https://mcp.nomadstays.com",
   "repository": {
     "url": "https://github.com/nomadstays/nomadstays-mcp-server",
     "source": "github"
   },
-  "version": "0.5.0",
   "remotes": [
     {
       "type": "streamable-http",
