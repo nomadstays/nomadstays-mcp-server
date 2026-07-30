@@ -246,7 +246,7 @@
                 </a>
                 <a href="#supplier" class="quick-link">
                     <h4>🏨 Supplier Integration</h4>
-                    <p>Push your availability to NomadStays in real time</p>
+                    <p>Push your availability to Nomad Stays in real time</p>
                 </a>
             </div>
         </div>
@@ -272,7 +272,7 @@
                 https://mcp.nomadstays.com/mcp
             </div>
         </div>
-        <p style="margin-top: 1rem; font-size: 0.9rem;">Claude Desktop will open a sign-in prompt — log in with your NomadStays account and click Allow. You can then ask:
+        <p style="margin-top: 1rem; font-size: 0.9rem;">Claude Desktop will open a sign-in prompt — log in with your Nomad Stays account and click Allow. You can then ask:
             <em>"Find me remote work stays in Portugal"</em></p>
     </div>
 
@@ -282,7 +282,7 @@
                     <li>Go to <strong>Settings → Connectors</strong> (Claude.ai) or the equivalent connector/MCP settings in ChatGPT</li>
                     <li>Click <strong>"Add custom connector"</strong> / <strong>"Add Server"</strong></li>
                     <li>Enter server URL: <code><a href="https://mcp.nomadstays.com/mcp" target="_blank" style="color: #667eea; text-decoration: underline;">https://mcp.nomadstays.com/mcp</a></code></li>
-                    <li>Complete the NomadStays sign-in prompt and click Allow, then start using it in conversations!</li>
+                    <li>Complete the Nomad Stays sign-in prompt and click Allow, then start using it in conversations!</li>
                 </ol>
             </div>
             <div class="endpoint">
@@ -306,13 +306,13 @@
 
                 <div style="background: #fff8e1; border: 1px solid #ffca28; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0;">
                     <h3 style="margin-top: 0;">🔑 Setting Up Your AI Assistant as a Trusted Stay Partner (Step-by-Step)</h3>
-                    <p style="margin-bottom: 1rem;">If you manage a Stay on NomadStays, you can let your own AI assistant read and update your listing, rooms, prices, and photos for you. You don't need to know how to code — it's a self-service connection using your NomadStays login, no waiting on the NomadStays team. This works with <strong>ChatGPT</strong>, <strong>Claude.ai</strong>, and <strong>Claude Desktop's Connectors</strong>.</p>
+                    <p style="margin-bottom: 1rem;">If you manage a Stay on Nomad Stays, you can let your own AI assistant read and update your listing, rooms, prices, and photos for you. You don't need to know how to code — it's a self-service connection using your Nomad Stays login, no waiting on the Nomad Stays team. This works with <strong>ChatGPT</strong>, <strong>Claude.ai</strong>, and <strong>Claude Desktop's Connectors</strong>.</p>
 
                     <h4 style="margin-top: 1.5rem;">Step 1 — Turn on two-factor authentication</h4>
-                    <p>Before you can connect an agent, your NomadStays account needs two-factor authentication (2FA) turned on. This protects your listing in case access is ever lost or shared. Go to <a href="https://www.nomadstays.com/Account/EnableAuthenticator" target="_blank">Enable two-factor authentication</a> and follow the on-screen instructions if you haven't already.</p>
+                    <p>Before you can connect an agent, your Nomad Stays account needs two-factor authentication (2FA) turned on. This protects your listing in case access is ever lost or shared. Go to <a href="https://www.nomadstays.com/Account/EnableAuthenticator" target="_blank">Enable two-factor authentication</a> and follow the on-screen instructions if you haven't already.</p>
 
                     <h4 style="margin-top: 1.5rem;">Step 2 — Add the connector in your AI assistant</h4>
-                    <p>In ChatGPT or Claude.ai, add a new connector/MCP server pointing at <code><a href="https://mcp.nomadstays.com/mcp" target="_blank">https://mcp.nomadstays.com/mcp</a></code>. In Claude Desktop, add it under <strong>Settings → Connectors</strong> instead. Your assistant will open a NomadStays sign-in and authorization prompt — log in and click <strong>Allow</strong>. Access is granted immediately, and you can review or revoke connected agents any time from your <a href="https://www.nomadstays.com/stayadmin/user-profile-stays" target="_blank">Stay profile page</a>.</p>
+                    <p>In ChatGPT or Claude.ai, add a new connector/MCP server pointing at <code><a href="https://mcp.nomadstays.com/mcp" target="_blank">https://mcp.nomadstays.com/mcp</a></code>. In Claude Desktop, add it under <strong>Settings → Connectors</strong> instead. Your assistant will open a Nomad Stays sign-in and authorization prompt — log in and click <strong>Allow</strong>. Access is granted immediately, and you can review or revoke connected agents any time from your <a href="https://www.nomadstays.com/stayadmin/user-profile-stays" target="_blank">Operator Information page</a>.</p>
 
                     <h4 style="margin-top: 1.5rem;">Step 3 — Try it out</h4>
                     <p>Start a new conversation and ask something like: <em>"List my Stays"</em> or <em>"Show me the current price packages on my Stay."</em> If your assistant responds with your real listing data, it's working.</p>
@@ -933,21 +933,21 @@
         <div class="section" id="supplier">
             <h2>🏨 Supplier / PMS Integration</h2>
             <p>If you operate a property management system (PMS) or channel manager, you can sync your availability
-                calendar directly with NomadStays. Two integration modes are available:</p>
+                calendar directly with Nomad Stays. Two integration modes are available:</p>
 
             <h3 style="margin-top:1.5rem;">Option 1 — MCP Server (Pull)</h3>
-            <p>Run your own MCP server that exposes a <code>get_allocation</code> tool. NomadStays polls it hourly and
+            <p>Run your own MCP server that exposes a <code>get_allocation</code> tool. Nomad Stays polls it hourly and
                 writes the returned availability into our booking system automatically.</p>
             <ul style="margin-left: 2rem; margin-top: 0.5rem;">
                 <li>Expose your server over HTTPS (Streamable HTTP <code>POST /mcp</code> preferred)</li>
                 <li>Implement the <code>get_allocation</code> tool — takes <code>property_id</code>, <code>start_date</code>, <code>end_date</code></li>
                 <li>Return a <code>ranges</code> array with only reduced-allocation date periods</li>
-                <li>Secure with a Bearer token — NomadStays sends <code>Authorization: Bearer &lt;key&gt;</code> on every request</li>
+                <li>Secure with a Bearer token — Nomad Stays sends <code>Authorization: Bearer &lt;key&gt;</code> on every request</li>
             </ul>
 
             <h3 style="margin-top:1.5rem;">Option 2 — Webhook Push <span style="background:#28a745;color:#fff;font-size:0.75rem;padding:2px 8px;border-radius:4px;vertical-align:middle;margin-left:6px;">Recommended</span></h3>
-            <p>Push availability changes to NomadStays the moment they occur — no waiting for the next poll cycle.
-                When webhook push is enabled, NomadStays reduces polling to a once-daily safety check.</p>
+            <p>Push availability changes to Nomad Stays the moment they occur — no waiting for the next poll cycle.
+                When webhook push is enabled, Nomad Stays reduces polling to a once-daily safety check.</p>
 
             <div class="endpoint" style="margin-top:1rem;">
                 <span class="method" style="background:#28a745;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold;font-family:monospace;">POST</span>

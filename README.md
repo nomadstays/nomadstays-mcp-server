@@ -1,6 +1,6 @@
 # NomadStays MCP Server
 
-An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that gives AI agents access to NomadStays accommodation data — search by country, continent, location, lifestyle, budget, amenities, and availability.
+An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that gives AI agents access to Nomad Stays accommodation data — search by country, continent, location, lifestyle, budget, amenities, and availability.
 
 Compatible with **Claude**, **ChatGPT**, and any MCP-aware AI agent.
 
@@ -85,7 +85,7 @@ Key rules: boutique Stays (`Boutique1`–`Boutique6` room types) and standard St
 ### 1. Prerequisites
 
 - Node.js 20+
-- Access to a NomadStays SQL Server database (hosted on Coolify/Hetzner)
+- Access to a Nomad Stays SQL Server database (hosted on Coolify/Hetzner)
 
 ### 2. Install
 
