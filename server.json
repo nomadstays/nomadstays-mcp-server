@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.nomadstays/nomadstays-mcp-server",
+  "name": "io.github.nomadstays/mcp-server",
   "title": "Nomad Stays",
   "description": "Search remote-work accommodations worldwide; Trusted Stay Partners can manage their own listings.",
   "version": "0.7.0",
