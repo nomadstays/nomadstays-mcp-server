@@ -87,6 +87,18 @@ import {
   stayResultsToolInvocationMeta,
   stayResultsWidgetHtml,
 } from "./widgets/stayResultsWidget.js";
+import {
+  AVAILABILITY_TEMPLATE_URI,
+  availabilityWidgetMeta,
+  availabilityToolInvocationMeta,
+  availabilityWidgetHtml,
+} from "./widgets/availabilityWidget.js";
+import {
+  BOOKING_TEMPLATE_URI,
+  bookingWidgetMeta,
+  bookingToolInvocationMeta,
+  bookingWidgetHtml,
+} from "./widgets/bookingWidget.js";
 
 
 /**
@@ -526,14 +538,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         stayId: String(stayId), 
         checkIn: String(checkIn), 
         checkOut: String(checkOut), 
-        roomType: roomType ? String(roomType) : undefined 
+        roomType: roomType ? String(roomType) : undefined
       });
 
       return {
         content: [{
           type: "text" as const,
           text: JSON.stringify(result)
-        }]
+        }],
+        structuredContent: result,
+        _meta: availabilityToolInvocationMeta
       };
     } catch (err: any) {
       throw new Error(`DB query failed: ${err?.message ?? String(err)}`);
@@ -1438,7 +1452,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         children: request.params.arguments?.children != null ? Number(request.params.arguments.children) : undefined,
         pets: request.params.arguments?.pets != null ? Number(request.params.arguments.pets) : undefined,
       });
-      return CompatibilityHelper.formatToolResponse(result);
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: result,
+        _meta: bookingToolInvocationMeta
+      };
     } catch (err: any) {
       throw new Error(`quoteStayBooking failed: ${err?.message ?? String(err)}`);
     }
@@ -1456,7 +1474,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         contactPhone: request.params.arguments?.contactPhone != null ? String(request.params.arguments.contactPhone) : undefined,
         specialRequest: request.params.arguments?.specialRequest != null ? String(request.params.arguments.specialRequest) : undefined,
       });
-      return CompatibilityHelper.formatToolResponse(result);
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: result,
+        _meta: bookingToolInvocationMeta
+      };
     } catch (err: any) {
       throw new Error(`bookStay failed: ${err?.message ?? String(err)}`);
     }
@@ -1468,7 +1490,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
     try {
       const result = await mcpAgentClient.getBookingStatus(String(pnr));
-      return CompatibilityHelper.formatToolResponse(result);
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: result,
+        _meta: bookingToolInvocationMeta
+      };
     } catch (err: any) {
       throw new Error(`getBookingStatus failed: ${err?.message ?? String(err)}`);
     }
@@ -1549,13 +1575,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
  */
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
   // Apps SDK widget templates — always listed, independent of DB connectivity
-  const widgetResources = [{
-    uri: STAY_RESULTS_TEMPLATE_URI,
-    mimeType: "text/html+skybridge",
-    name: "Stay results",
-    description: "Stay results widget markup",
-    _meta: stayResultsWidgetMeta,
-  }];
+  const widgetResources = [
+    {
+      uri: STAY_RESULTS_TEMPLATE_URI,
+      mimeType: "text/html+skybridge",
+      name: "Stay results",
+      description: "Stay results widget markup",
+      _meta: stayResultsWidgetMeta,
+    },
+    {
+      uri: AVAILABILITY_TEMPLATE_URI,
+      mimeType: "text/html+skybridge",
+      name: "Availability",
+      description: "Stay availability widget markup",
+      _meta: availabilityWidgetMeta,
+    },
+    {
+      uri: BOOKING_TEMPLATE_URI,
+      mimeType: "text/html+skybridge",
+      name: "Booking",
+      description: "Booking quote/checkout/status widget markup",
+      _meta: bookingWidgetMeta,
+    },
+  ];
 
   // Try to include stays from DB if a connection is configured
   const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
@@ -1629,6 +1671,28 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
         mimeType: "text/html+skybridge",
         text: stayResultsWidgetHtml,
         _meta: stayResultsWidgetMeta,
+      }],
+    };
+  }
+
+  if (request.params.uri === AVAILABILITY_TEMPLATE_URI) {
+    return {
+      contents: [{
+        uri: AVAILABILITY_TEMPLATE_URI,
+        mimeType: "text/html+skybridge",
+        text: availabilityWidgetHtml,
+        _meta: availabilityWidgetMeta,
+      }],
+    };
+  }
+
+  if (request.params.uri === BOOKING_TEMPLATE_URI) {
+    return {
+      contents: [{
+        uri: BOOKING_TEMPLATE_URI,
+        mimeType: "text/html+skybridge",
+        text: bookingWidgetHtml,
+        _meta: bookingWidgetMeta,
       }],
     };
   }
@@ -1958,7 +2022,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["stayId", "checkIn", "checkOut"]
-        }
+        },
+        _meta: availabilityWidgetMeta
       },
 
       {
@@ -2829,7 +2894,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             pets: { type: "number", description: "Number of pets. Defaults to 0." }
           },
           required: ["packageId", "checkIn", "checkOut"]
-        }
+        },
+        _meta: bookingWidgetMeta
       },
       {
         name: "bookStay",
@@ -2844,7 +2910,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             specialRequest: { type: "string", description: "Any special request to pass along to the Stay." }
           },
           required: ["quoteId"]
-        }
+        },
+        _meta: bookingWidgetMeta
       },
       {
         name: "getBookingStatus",
@@ -2855,7 +2922,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             pnr: { type: "string", description: "The booking reference (PNR) returned by bookStay" }
           },
           required: ["pnr"]
-        }
+        },
+        _meta: bookingWidgetMeta
       },
       {
         name: "listMyBookings",
