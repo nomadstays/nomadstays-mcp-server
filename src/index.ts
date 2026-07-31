@@ -99,6 +99,13 @@ import {
   bookingToolInvocationMeta,
   bookingWidgetHtml,
 } from "./widgets/bookingWidget.js";
+import {
+  LIST_CARDS_TEMPLATE_URI,
+  listCardsWidgetMeta,
+  listCardsToolInvocationMeta,
+  listCardsWidgetHtml,
+  buildListCardsStructuredContent,
+} from "./widgets/listCardsWidget.js";
 
 
 /**
@@ -810,7 +817,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
     try {
       const result = await mcpAgentClient.getMyStays();
-      return CompatibilityHelper.formatToolResponse(result);
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: buildListCardsStructuredContent(result, {
+          titleField: "title",
+          booleanFields: ["listed"]
+        }),
+        _meta: listCardsToolInvocationMeta
+      };
     } catch (err: any) {
       throw new Error(`getMyStays failed: ${err?.message ?? String(err)}`);
     }
@@ -1324,7 +1338,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
     try {
       const result = await mcpAgentClient.listStayApplications();
-      return CompatibilityHelper.formatToolResponse(result);
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: buildListCardsStructuredContent(result, {
+          titleField: "stayName",
+          booleanFields: ["submitted", "accepted"]
+        }),
+        _meta: listCardsToolInvocationMeta
+      };
     } catch (err: any) {
       throw new Error(`listStayApplications failed: ${err?.message ?? String(err)}`);
     }
@@ -1381,7 +1402,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
     try {
       const result = await mcpAgentClient.listExperienceApplications();
-      return CompatibilityHelper.formatToolResponse(result);
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: buildListCardsStructuredContent(result, {
+          titleField: "experienceName",
+          booleanFields: ["submitted", "accepted"]
+        }),
+        _meta: listCardsToolInvocationMeta
+      };
     } catch (err: any) {
       throw new Error(`listExperienceApplications failed: ${err?.message ?? String(err)}`);
     }
@@ -1504,7 +1532,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
     try {
       const result = await mcpAgentClient.listMyBookings();
-      return CompatibilityHelper.formatToolResponse(result);
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: buildListCardsStructuredContent(result, {
+          titleField: "stayTitle",
+          statusField: "status",
+          actionUrlField: "checkoutUrl",
+          actionLabel: "Complete payment"
+        }),
+        _meta: listCardsToolInvocationMeta
+      };
     } catch (err: any) {
       throw new Error(`listMyBookings failed: ${err?.message ?? String(err)}`);
     }
@@ -1514,7 +1551,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
     try {
       const result = await mcpAgentClient.listCoworkingApplications();
-      return CompatibilityHelper.formatToolResponse(result);
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: buildListCardsStructuredContent(result, {
+          titleField: "coworkingName",
+          booleanFields: ["submitted", "accepted"]
+        }),
+        _meta: listCardsToolInvocationMeta
+      };
     } catch (err: any) {
       throw new Error(`listCoworkingApplications failed: ${err?.message ?? String(err)}`);
     }
@@ -1596,6 +1640,13 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
       name: "Booking",
       description: "Booking quote/checkout/status widget markup",
       _meta: bookingWidgetMeta,
+    },
+    {
+      uri: LIST_CARDS_TEMPLATE_URI,
+      mimeType: "text/html+skybridge",
+      name: "List cards",
+      description: "Generic list-of-records widget markup",
+      _meta: listCardsWidgetMeta,
     },
   ];
 
@@ -1693,6 +1744,17 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
         mimeType: "text/html+skybridge",
         text: bookingWidgetHtml,
         _meta: bookingWidgetMeta,
+      }],
+    };
+  }
+
+  if (request.params.uri === LIST_CARDS_TEMPLATE_URI) {
+    return {
+      contents: [{
+        uri: LIST_CARDS_TEMPLATE_URI,
+        mimeType: "text/html+skybridge",
+        text: listCardsWidgetHtml,
+        _meta: listCardsWidgetMeta,
       }],
     };
   }
@@ -2129,7 +2191,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {},
           required: []
-        }
+        },
+        _meta: listCardsWidgetMeta
       },
       {
         name: "getMyStayDetail",
@@ -2677,7 +2740,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {},
           required: []
-        }
+        },
+        _meta: listCardsWidgetMeta
       },
       {
         name: "getStayApplication",
@@ -2778,7 +2842,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {},
           required: []
-        }
+        },
+        _meta: listCardsWidgetMeta
       },
       {
         name: "getExperienceApplication",
@@ -2932,7 +2997,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {},
           required: []
-        }
+        },
+        _meta: listCardsWidgetMeta
       },
 
       {
@@ -2942,7 +3008,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {},
           required: []
-        }
+        },
+        _meta: listCardsWidgetMeta
       },
       {
         name: "getCoworkingApplication",
