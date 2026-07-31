@@ -1818,7 +1818,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             id: { type: "string", description: "Stay identifier (searches the EntryId field)" }
           },
           required: ["id"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -1835,7 +1836,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             acceptGdpr: { type: "boolean", description: "Must be true — the person has agreed to NomadStays' GDPR terms" }
           },
           required: ["firstName", "lastName", "email", "telephone", "password", "acceptGdpr"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByCountry",
@@ -1854,7 +1856,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["countrycode"]
         },
-        _meta: stayResultsWidgetMeta
+        _meta: stayResultsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByContinent",
@@ -1873,7 +1876,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["continent"]
         },
-        _meta: stayResultsWidgetMeta
+        _meta: stayResultsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByLocation",
@@ -1892,7 +1896,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["location"]
         },
-        _meta: stayResultsWidgetMeta
+        _meta: stayResultsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "searchHelpCenter",
@@ -1910,7 +1915,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: []
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getHelpCenterArticle",
@@ -1924,7 +1930,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["id"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "listHelpCenterCategories",
@@ -1933,7 +1940,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {},
           required: []
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByLifestyle",
@@ -1952,7 +1960,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["lifestyle"]
         },
-        _meta: stayResultsWidgetMeta
+        _meta: stayResultsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -1988,7 +1997,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["durationDays", "maxPrice", "currency"]
         },
-        _meta: stayResultsWidgetMeta
+        _meta: stayResultsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2018,7 +2028,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["amenities"]
         },
-        _meta: stayResultsWidgetMeta
+        _meta: stayResultsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByWiFiSpeed",
@@ -2037,7 +2048,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: []
         },
-        _meta: stayResultsWidgetMeta
+        _meta: stayResultsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2047,7 +2059,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {},
           required: []
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2057,7 +2070,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {},
           required: []
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2085,7 +2099,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "checkIn", "checkOut"]
         },
-        _meta: availabilityWidgetMeta
+        _meta: availabilityWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2116,7 +2131,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["stayId", "preferredCheckIn", "minLengthOfStay"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2143,7 +2159,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["stayId", "year", "month", "minLengthOfStay"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2166,7 +2183,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["roomId", "checkIn", "checkOut"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2181,7 +2199,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["roomId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -3162,8 +3181,7 @@ async function main() {
                 transport: 'streamable-http',
                 endpoints: {
                     mcp: '/mcp',
-                    health: '/health',
-                    jsonrpc: '/ (POST for legacy support)'
+                    health: '/health'
                 }
             });
         });
@@ -3234,160 +3252,6 @@ async function main() {
         // Root endpoint - serve index.html
         app.get('/', (req, res) => {
             res.sendFile('index.html', { root: '.' });
-        });
-        
-        // JSON-RPC endpoint for MCP protocol
-        app.post('/', async (req, res) => {
-            try {
-                const request = req.body;
-                
-                // Validate JSON-RPC request
-                if (!request || typeof request !== 'object' || !request.method) {
-                    return res.status(400).json({
-                        jsonrpc: '2.0',
-                        error: {
-                            code: -32600,
-                            message: 'Invalid Request'
-                        },
-                        id: request?.id || null
-                    });
-                }
-                
-                // Handle MCP methods directly using the internal request handlers
-                let result;
-                
-                try {
-                    switch (request.method) {
-                        case 'tools/list': {
-                            // Return the list of available tools
-                            result = {
-                                tools: [
-                                    {
-                                        name: "getStaysByCountry",
-                                        description: "Search for nomad stays in a specific country. Supports searching by 2-letter country code (e.g. 'ES', 'PT', 'TH') or by partial country name (e.g. 'Spain', 'Port', 'Thai'). Returns a maximum of 15 results. Use this tool when users ask about accommodations, stays, properties, or places to stay in a specific country or region.",
-                                        inputSchema: {
-                                            type: "object",
-                                            properties: {
-                                                countrycode: {
-                                                    type: "string",
-                                                    description: "Either a 2-letter ISO country code (e.g. 'ES', 'PT', 'TH') OR a partial country name (e.g. 'Spain', 'Port', 'Thai'). The search will match country codes exactly or search for country names containing this text."
-                                                },
-                                                limit: {
-                                                    type: "number",
-                                                    description: "Maximum number of stays to return (default: 15, max: 15)"
-                                                }
-                                            }
-                                        }
-                                    }
-                                ]
-                            };
-                            break;
-                        }
-                        
-                        case 'tools/call': {
-                            const toolName = request.params?.name;
-                            const args = request.params?.arguments || {};
-                            
-                            if (toolName === 'getStaysByCountry') {
-                                const countrycode = args.countrycode ?? null;
-                                const limit = Number(args.limit) || 15;
-                                
-                                const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-                                let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-                                connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-                                
-                                if (!connStr) {
-                                    throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set");
-                                }
-                                
-                                const { getStaysByCountry } = await import('./db/getStaysByCountry.js');
-                                const stays = await getStaysByCountry(connStr, { country: countrycode, limit });
-                                
-                                result = {
-                                    content: [
-                                        {
-                                            type: "text",
-                                            text: JSON.stringify(stays, null, 2)
-                                        }
-                                    ]
-                                };
-                            } else {
-                                throw new Error(`Unknown tool: ${toolName}`);
-                            }
-                            break;
-                        }
-                        
-                        case 'resources/list': {
-                            result = {
-                                resources: []
-                            };
-                            break;
-                        }
-                        
-                        case 'resources/read': {
-                            throw new Error('Resource read not yet implemented in JSON-RPC mode');
-                        }
-                        
-                        case 'prompts/list': {
-                            result = {
-                                prompts: [
-                                    {
-                                        name: "summarize_notes",
-                                        description: "Creates a summary of all notes",
-                                        arguments: []
-                                    }
-                                ]
-                            };
-                            break;
-                        }
-                        
-                        case 'prompts/get': {
-                            throw new Error('Prompts not implemented');
-                        }
-                        
-                        default:
-                            return res.status(400).json({
-                                jsonrpc: '2.0',
-                                error: {
-                                    code: -32601,
-                                    message: 'Method not found'
-                                },
-                                id: request.id || null
-                            });
-                    }
-                    
-                    // Return successful JSON-RPC response
-                    res.json({
-                        jsonrpc: '2.0',
-                        result: result,
-                        id: request.id || null
-                    });
-                    
-                } catch (handlerError: any) {
-                    console.error('Handler Error:', handlerError);
-                    res.status(500).json({
-                        jsonrpc: '2.0',
-                        error: {
-                            code: -32603,
-                            message: 'Internal error',
-                            data: handlerError?.message || String(handlerError)
-                        },
-                        id: request.id || null
-                    });
-                }
-                
-            } catch (error: any) {
-                console.error('JSON-RPC Error:', error);
-                res.status(500).json({
-                    jsonrpc: '2.0',
-                    error: {
-                        code: -32700,
-                        message: 'Parse error',
-                        data: error?.message || String(error)
-                    },
-                    id: null
-                });
-            }
         });
         
         app.listen(Number(port), () => {
