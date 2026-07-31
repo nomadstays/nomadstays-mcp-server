@@ -6,7 +6,7 @@ Compatible with **Claude**, **ChatGPT**, and any MCP-aware AI agent.
 
 ## Tools available
 
-Full, current tool list: 72 tools total. See [mcp.nomadstays.com](https://mcp.nomadstays.com) for the complete reference with parameters — this README lists them grouped by category; keep both in sync when tools are added or changed.
+Full, current tool list: 76 tools total. See [mcp.nomadstays.com](https://mcp.nomadstays.com) for the complete reference with parameters — this README lists them grouped by category; keep both in sync when tools are added or changed.
 
 ### Search, availability, and reference (public, no auth)
 
@@ -57,6 +57,15 @@ Stay, Experience, and Coworking applications each go through the same `list` / `
 | `listStayApplications` / `getStayApplication` / `createStayApplication` / `saveStayApplication` / `submitStayApplication` | Full Stay Application lifecycle |
 | `listExperienceApplications` / `getExperienceApplication` / `createExperienceApplication` / `saveExperienceApplication` / `submitExperienceApplication` | Full Experience Application lifecycle (min. 4-day experiences, enforced server-side) |
 | `listCoworkingApplications` / `getCoworkingApplication` / `createCoworkingApplication` / `saveCoworkingApplication` / `submitCoworkingApplication` | Full Coworking Application lifecycle — no Application Fee |
+
+### Booking (require an MCP agent token)
+
+| Tool | Description |
+|---|---|
+| `quoteStayBooking` | Price a prospective booking (package, dates, guests) before committing |
+| `bookStay` | Create a booking on the caller's own behalf; returns a `checkoutUrl` or resolves as confirmed |
+| `getBookingStatus` | Check whether a booking is confirmed, verified fresh against the payment provider |
+| `listMyBookings` | List the caller's own bookings, including `needsAction`/`checkoutUrl` for anything still pending |
 
 ## Trusted Stay Partner management tools
 
