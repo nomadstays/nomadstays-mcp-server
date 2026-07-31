@@ -430,6 +430,29 @@
                             <td>roomId, checkIn, checkOut</td>
                         </tr>
                         <tr>
+                            <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">🧳 Stay Booking Tools <span style="font-weight: normal; font-size: 0.85rem; color: #6c757d;">(require an MCP agent token with the "bookings" scope)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>quoteStayBooking</code></td>
+                            <td>Get a server-computed price and availability quote for booking a Stay package on the caller's own behalf. Price is always re-derived from the package's actual pricing tiers. Returns a quoteId valid for about 15 minutes</td>
+                            <td>packageId, checkIn, checkOut, rooms (optional), adults (optional), children (optional), pets (optional)</td>
+                        </tr>
+                        <tr>
+                            <td><code>bookStay</code></td>
+                            <td>Create a real booking from a quoteId returned by quoteStayBooking, and return a hosted checkoutUrl. The member must open the checkoutUrl themselves to pay — no card details ever pass through the assistant</td>
+                            <td>quoteId, contactName (optional), contactEmail (optional), contactPhone (optional), specialRequest (optional)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getBookingStatus</code></td>
+                            <td>Check a Stay booking's real payment status by PNR. Status is always freshly re-verified against Airwallex directly if not already confirmed paid</td>
+                            <td>pnr</td>
+                        </tr>
+                        <tr>
+                            <td><code>listMyBookings</code></td>
+                            <td>List all Stay bookings owned by the caller's own account, most recent first. Each booking includes needsAction: true if it's still unpaid, with a ready-to-use checkoutUrl</td>
+                            <td>None</td>
+                        </tr>
+                        <tr>
                             <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">📚 Reference & Metadata Tools</td>
                         </tr>
                         <tr>
