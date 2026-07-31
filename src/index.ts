@@ -81,6 +81,12 @@ import { createStatsEndpoints } from "./tracking/statsEndpoints.js";
 import { runWithRequestAgentToken } from "./tracking/requestTokenContext.js";
 import { requestCallsProtectedTool } from "./auth/protectedTools.js";
 import { isTokenAcceptable, RESOURCE_URI } from "./auth/introspect.js";
+import {
+  STAY_RESULTS_TEMPLATE_URI,
+  stayResultsWidgetMeta,
+  stayResultsToolInvocationMeta,
+  stayResultsWidgetHtml,
+} from "./widgets/stayResultsWidget.js";
 
 
 /**
@@ -176,7 +182,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           content: [{
             type: "text" as const,
             text: JSON.stringify(stays)
-          }]
+          }],
+          structuredContent: { stays },
+          _meta: stayResultsToolInvocationMeta
         };
       } catch (err: any) {
         throw new Error(`DB query failed: ${err?.message ?? String(err)}`);
@@ -234,7 +242,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [{
           type: "text" as const,
           text: JSON.stringify(stays)
-        }]
+        }],
+        structuredContent: { stays },
+        _meta: stayResultsToolInvocationMeta
       };
     } catch (err: any) {
       // Surface the DB error to the client for easier debugging
@@ -269,7 +279,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [{
           type: "text" as const,
           text: JSON.stringify(stays)
-        }]
+        }],
+        structuredContent: { stays },
+        _meta: stayResultsToolInvocationMeta
       };
     } catch (err: any) {
       // Surface the DB error to the client for easier debugging
@@ -304,7 +316,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [{
           type: "text" as const,
           text: JSON.stringify(stays)
-        }]
+        }],
+        structuredContent: { stays },
+        _meta: stayResultsToolInvocationMeta
       };
     } catch (err: any) {
       // Surface the DB error to the client for easier debugging
@@ -420,7 +434,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [{
           type: "text" as const,
           text: JSON.stringify(stays)
-        }]
+        }],
+        structuredContent: { stays },
+        _meta: stayResultsToolInvocationMeta
       };
     } catch (err: any) {
       // Surface the DB error to the client for easier debugging
@@ -670,7 +686,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [{
           type: "text" as const,
           text: JSON.stringify(stays)
-        }]
+        }],
+        structuredContent: { stays },
+        _meta: stayResultsToolInvocationMeta
       };
     } catch (err: any) {
       throw new Error(`DB query failed: ${err?.message ?? String(err)}`);
@@ -761,7 +779,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [{
           type: "text" as const,
           text: JSON.stringify(stays)
-        }]
+        }],
+        structuredContent: { stays },
+        _meta: stayResultsToolInvocationMeta
       };
     } catch (err: any) {
       throw new Error(`DB query failed: ${err?.message ?? String(err)}`);
@@ -1528,13 +1548,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
  * Handler for listing available stays as resources.
  */
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
+  // Apps SDK widget templates — always listed, independent of DB connectivity
+  const widgetResources = [{
+    uri: STAY_RESULTS_TEMPLATE_URI,
+    mimeType: "text/html+skybridge",
+    name: "Stay results",
+    description: "Stay results widget markup",
+    _meta: stayResultsWidgetMeta,
+  }];
+
   // Try to include stays from DB if a connection is configured
   const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
   let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
   // strip surrounding quotes and fix common port syntax mistakes
   connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
   if (!connStr) {
-    return { resources: [] };
+    return { resources: widgetResources };
   }
 
   try {
@@ -1571,11 +1600,11 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
       };
     }).filter(Boolean);
 
-    return { resources: stayResources };
+    return { resources: [...widgetResources, ...stayResources] };
   } catch (err: any) {
-    // If DB query fails, return empty array (don't hard-fail listing)
+    // If DB query fails, still surface the widget resources (don't hard-fail listing)
     console.error('Failed to list stays for resources:', err?.message ?? String(err));
-    return { resources: [] };
+    return { resources: widgetResources };
   }
 });
 
@@ -1590,6 +1619,18 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     url = new URL(request.params.uri);
   } catch (err) {
     throw new Error(`Invalid resource URI: ${String(request.params.uri)}`);
+  }
+
+  // Apps SDK widget templates (ui://widget/...) — self-contained HTML, no DB lookup
+  if (request.params.uri === STAY_RESULTS_TEMPLATE_URI) {
+    return {
+      contents: [{
+        uri: STAY_RESULTS_TEMPLATE_URI,
+        mimeType: "text/html+skybridge",
+        text: stayResultsWidgetHtml,
+        _meta: stayResultsWidgetMeta,
+      }],
+    };
   }
 
   const id = url.pathname.replace(/^\//, '');
@@ -1676,17 +1717,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {
-            countrycode: { 
+            countrycode: {
               type: "string",
               description: "2-letter country code (e.g., 'MA', 'US') or partial country name (e.g., 'Antigua')"
             },
-            limit: { 
+            limit: {
               type: "number",
               description: "Maximum number of results to return (default: 15)"
             }
           },
           required: ["countrycode"]
-        }
+        },
+        _meta: stayResultsWidgetMeta
       },
       {
         name: "getStaysByContinent",
@@ -1694,17 +1736,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {
-            continent: { 
+            continent: {
               type: "string",
               description: "Continent name or partial match (e.g., 'Europe', 'Asia', 'Africa')"
             },
-            limit: { 
+            limit: {
               type: "number",
               description: "Maximum number of results to return (default: 15)"
             }
           },
           required: ["continent"]
-        }
+        },
+        _meta: stayResultsWidgetMeta
       },
       {
         name: "getStaysByLocation",
@@ -1712,17 +1755,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {
-            location: { 
+            location: {
               type: "string",
               description: "Location search term to match against City, State, location_name, location_country, or location_description (e.g., 'Paris', 'California', 'Beach', 'Mountain')"
             },
-            limit: { 
+            limit: {
               type: "number",
               description: "Maximum number of results to return (default: 15)"
             }
           },
           required: ["location"]
-        }
+        },
+        _meta: stayResultsWidgetMeta
       },
       {
         name: "searchHelpCenter",
@@ -1775,13 +1819,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "string",
               description: "Lifestyle/genre category name or partial match (e.g., 'Digital Nomad', 'Beach', 'City'). Use getAllLifestyles tool to see all available categories."
             },
-            limit: { 
+            limit: {
               type: "number",
               description: "Maximum number of results to return (default: 15)"
             }
           },
           required: ["lifestyle"]
-        }
+        },
+        _meta: stayResultsWidgetMeta
       },
 
       {
@@ -1816,7 +1861,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["durationDays", "maxPrice", "currency"]
-        }
+        },
+        _meta: stayResultsWidgetMeta
       },
 
       {
@@ -1845,7 +1891,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["amenities"]
-        }
+        },
+        _meta: stayResultsWidgetMeta
       },
       {
         name: "getStaysByWiFiSpeed",
@@ -1863,7 +1910,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: []
-        }
+        },
+        _meta: stayResultsWidgetMeta
       },
 
       {
@@ -2006,35 +2054,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["roomId"]
-        }
-      },
-
-      {
-        name: "getStaysByAmenities",
-        description: "Find all stays that have specific amenities. Searches both stay-level amenities (referenced by tbStayFacilities) and room-level amenities (referenced by tbRoomFacilities). Use matchType 'any' to find stays with at least one amenity, or 'all' to find stays with all requested amenities. Can optionally filter by minimum WiFi download speed.",
-        inputSchema: {
-          type: "object",
-          properties: {
-            amenities: {
-              type: "array",
-              items: { type: "string" },
-              description: "Array of amenity names to search for (e.g., ['WiFi', 'Air Conditioning', 'Pool']). Use getAllAmenities to see all available amenities."
-            },
-            matchType: {
-              type: "string",
-              enum: ["any", "all"],
-              description: "OPTIONAL: 'any' (default) finds stays with at least one amenity, 'all' finds stays with all amenities"
-            },
-            minWifiSpeed: {
-              type: "number",
-              description: "OPTIONAL: Minimum WiFi download speed in Mbps (default: 0). Only returns stays with WiFi speed at or above this threshold."
-            },
-            limit: {
-              type: "number",
-              description: "Maximum number of results to return (default: 25)"
-            }
-          },
-          required: ["amenities"]
         }
       },
 
