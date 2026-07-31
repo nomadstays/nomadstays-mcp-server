@@ -35,6 +35,7 @@ const API_BASES = {
   stayApplication: "mcp-stay-application",
   experienceApplication: "mcp-experience-application",
   coworkingApplication: "mcp-coworking-application",
+  stayBooking: "mcp-stay-booking",
 } as const;
 type ApiBase = keyof typeof API_BASES;
 
@@ -249,4 +250,34 @@ export const mcpAgentClient = {
     call("PATCH", `/${applicationId}`, body, "experienceApplication"),
   submitExperienceApplication: (applicationId: string | number) =>
     call("POST", `/${applicationId}/submit`, undefined, "experienceApplication"),
+
+  // ── Stay Booking (Controllers/McpStayBookingApiController.cs) ────────────
+  // Lets an authenticated member book a Stay on their own behalf — the deferred item from
+  // docs/MEMBER_BOOKING_AGENT_PLAN.md, delivered in docs/AI_AGENT_STAY_BOOKING_PLAN.md.
+  // Gated on the "McpMember" role (the "bookings" OAuth scope) rather than "McpAgent" — a
+  // caller can hold both if their token was granted both scopes. quote() re-derives price and
+  // availability entirely server-side and returns a short-lived quoteId (~15 min); checkout()
+  // re-validates against the DB again before creating the real booking + Airwallex intent, so
+  // a stale/expired quote never silently books at an old price or against dates that filled up
+  // in between. The agent never touches card data: checkout() returns a checkoutUrl the member
+  // must open and pay through themselves, and getBookingStatus only ever reports "paid" after a
+  // fresh server-side re-check against Airwallex, never from a client-supplied claim.
+  quoteStayBooking: (body: {
+    packageId: string | number;
+    checkIn: string;
+    checkOut: string;
+    rooms?: number;
+    adults?: number;
+    children?: number;
+    pets?: number;
+  }) => call("POST", `/quote`, body, "stayBooking"),
+  bookStay: (body: {
+    quoteId: string;
+    contactName?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    specialRequest?: string;
+  }) => call("POST", `/checkout`, body, "stayBooking"),
+  getBookingStatus: (pnr: string) => call("GET", `/bookings/${encodeURIComponent(pnr)}/status`, undefined, "stayBooking"),
+  listMyBookings: () => call("GET", `/bookings`, undefined, "stayBooking"),
 };

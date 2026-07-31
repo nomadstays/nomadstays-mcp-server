@@ -1400,6 +1400,70 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "quoteStayBooking") {
+    const packageId = request.params.arguments?.packageId ?? null;
+    const checkIn = request.params.arguments?.checkIn ?? null;
+    const checkOut = request.params.arguments?.checkOut ?? null;
+    if (packageId == null) throw new Error("Tool 'quoteStayBooking' requires 'packageId' argument");
+    if (!checkIn) throw new Error("Tool 'quoteStayBooking' requires 'checkIn' argument");
+    if (!checkOut) throw new Error("Tool 'quoteStayBooking' requires 'checkOut' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.quoteStayBooking({
+        packageId: String(packageId),
+        checkIn: String(checkIn),
+        checkOut: String(checkOut),
+        rooms: request.params.arguments?.rooms != null ? Number(request.params.arguments.rooms) : undefined,
+        adults: request.params.arguments?.adults != null ? Number(request.params.arguments.adults) : undefined,
+        children: request.params.arguments?.children != null ? Number(request.params.arguments.children) : undefined,
+        pets: request.params.arguments?.pets != null ? Number(request.params.arguments.pets) : undefined,
+      });
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`quoteStayBooking failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "bookStay") {
+    const quoteId = request.params.arguments?.quoteId ?? null;
+    if (!quoteId) throw new Error("Tool 'bookStay' requires 'quoteId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.bookStay({
+        quoteId: String(quoteId),
+        contactName: request.params.arguments?.contactName != null ? String(request.params.arguments.contactName) : undefined,
+        contactEmail: request.params.arguments?.contactEmail != null ? String(request.params.arguments.contactEmail) : undefined,
+        contactPhone: request.params.arguments?.contactPhone != null ? String(request.params.arguments.contactPhone) : undefined,
+        specialRequest: request.params.arguments?.specialRequest != null ? String(request.params.arguments.specialRequest) : undefined,
+      });
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`bookStay failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getBookingStatus") {
+    const pnr = request.params.arguments?.pnr ?? null;
+    if (!pnr) throw new Error("Tool 'getBookingStatus' requires 'pnr' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getBookingStatus(String(pnr));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getBookingStatus failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "listMyBookings") {
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.listMyBookings();
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`listMyBookings failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   if (request.params.name === "listCoworkingApplications") {
     const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
     try {
@@ -2729,6 +2793,58 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             applicationId: { type: "number", description: "The application's ID" }
           },
           required: ["applicationId"]
+        }
+      },
+      {
+        name: "quoteStayBooking",
+        description: "Get a server-computed price and availability quote for booking a Stay package on the caller's own behalf. Price is always re-derived from the package's actual pricing tiers — never trust or reuse a price shown elsewhere. Picks the largest price tier whose length is <= the requested nights (e.g. 10 nights against 7/14/21/30-day tiers uses the 7-day tier's rate), falling back to the smallest tier if the stay is shorter than all of them. Returns a quoteId valid for about 15 minutes — call bookStay with it to actually create the booking and get a payment link. Requires the caller's token to carry the 'bookings' OAuth scope (McpMember role), separate from the listings-management 'McpAgent' scope other tools here use.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            packageId: { type: "number", description: "The Stay package's ID (from getPackages or search/browse tools)" },
+            checkIn: { type: "string", description: "Check-in date, YYYY-MM-DD" },
+            checkOut: { type: "string", description: "Check-out date, YYYY-MM-DD" },
+            rooms: { type: "number", description: "Number of rooms to book. Defaults to 1." },
+            adults: { type: "number", description: "Number of adult guests. Defaults to 1." },
+            children: { type: "number", description: "Number of child guests. Defaults to 0." },
+            pets: { type: "number", description: "Number of pets. Defaults to 0." }
+          },
+          required: ["packageId", "checkIn", "checkOut"]
+        }
+      },
+      {
+        name: "bookStay",
+        description: "Create a real booking from a quoteId returned by quoteStayBooking, and return a hosted checkoutUrl. The quote's price/availability is re-validated server-side one more time before the booking is created — a stale or expired quote will be rejected with a message to call quoteStayBooking again. You MUST send the checkoutUrl to the member and tell them to open it in their own browser to pay — you cannot complete this payment on their behalf, and no card details ever pass through you. Requires NOMADSTAYS_MCP_AGENT_TOKEN with the 'bookings' scope.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            quoteId: { type: "string", description: "The quoteId returned by quoteStayBooking" },
+            contactName: { type: "string", description: "Guest's full name for the booking. Defaults to the member's account name if omitted." },
+            contactEmail: { type: "string", description: "Contact email for the booking. Defaults to the member's account email if omitted." },
+            contactPhone: { type: "string", description: "Contact phone number for the booking." },
+            specialRequest: { type: "string", description: "Any special request to pass along to the Stay." }
+          },
+          required: ["quoteId"]
+        }
+      },
+      {
+        name: "getBookingStatus",
+        description: "Check a Stay booking's real payment status by PNR. Status is always freshly re-verified against Airwallex directly if not already confirmed paid — never trust a client-supplied claim of success. Only ever returns bookings owned by the caller's own account. Requires NOMADSTAYS_MCP_AGENT_TOKEN with the 'bookings' scope.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            pnr: { type: "string", description: "The booking reference (PNR) returned by bookStay" }
+          },
+          required: ["pnr"]
+        }
+      },
+      {
+        name: "listMyBookings",
+        description: "List all Stay bookings owned by the caller's own account, most recent first, with each one's current status. Each booking includes needsAction: true if it's still unpaid, with a ready-to-use checkoutUrl — call this proactively (e.g. at the start of a session, or when the member asks what's pending) and surface any needsAction bookings to the member, since there is no other way for them to be notified of an incomplete booking through this connection. Requires NOMADSTAYS_MCP_AGENT_TOKEN with the 'bookings' scope.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
         }
       },
 
