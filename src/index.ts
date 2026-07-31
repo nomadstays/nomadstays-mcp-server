@@ -2212,7 +2212,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        _meta: listCardsWidgetMeta
+        _meta: listCardsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayDetail",
@@ -2223,7 +2224,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayOnboardingStatus",
@@ -2234,7 +2236,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayRooms",
@@ -2245,7 +2248,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayPackages",
@@ -2256,7 +2260,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayOrganisationalData",
@@ -2267,7 +2272,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyBusinessProfile",
@@ -2276,7 +2282,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {},
           required: []
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2290,7 +2297,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             description: { type: "string", description: "OPTIONAL: new description" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createStayRoom",
@@ -2314,7 +2322,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             mcpRoomId: { type: "string", description: "OPTIONAL: external MCP room identifier to bind. NOT AVAILABLE for boutique Stays — the host UI has no field for this there, and the API will reject it." }
           },
           required: ["stayId", "roomTitle"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayRoom",
@@ -2339,7 +2348,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             mcpRoomId: { type: "string", description: "External MCP room identifier. NOT AVAILABLE for boutique Stays — the host UI has no field for this there, and the API will reject it." }
           },
           required: ["stayId", "roomId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "deleteStayRoom",
@@ -2351,7 +2361,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             roomId: { type: "number", description: "The room's EntryID — use getMyStayRooms to find it" }
           },
           required: ["stayId", "roomId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }
       },
       {
         name: "getRoomTypeOptions",
@@ -2362,12 +2373,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getRoomFacilityOptions",
         description: "List every room-level amenity/facility option available (roomFacilityFk in createStayRoom/updateStayRoom) — e.g. Wi-Fi, Air Conditioning, Private Bathroom. Wi-Fi is mandatory and always included even if not explicitly selected. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
-        inputSchema: { type: "object", properties: {}, required: [] }
+        inputSchema: { type: "object", properties: {}, required: [] },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "deleteRoomPhoto",
@@ -2381,7 +2394,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             fileName: { type: "string", description: "The exact file name from getMyStayRooms" }
           },
           required: ["stayId", "roomId", "roomArea", "fileName"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }
       },
       {
         name: "reorderRoomPhotos",
@@ -2399,7 +2413,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["stayId", "roomId", "roomArea", "fileNames"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createStayPackage",
@@ -2433,7 +2448,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["stayId", "packageName"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayPackage",
@@ -2469,7 +2485,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["stayId", "packageId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "deleteStayPackage",
@@ -2481,7 +2498,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             packageId: { type: "number", description: "The package's EntryID (tbStayPackages) to delete" }
           },
           required: ["stayId", "packageId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }
       },
       {
         name: "getCurrencyOptions",
@@ -2489,7 +2507,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {}
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayOrganisationalData",
@@ -2529,7 +2548,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             fullPayment: { type: "boolean", description: "Whether guests must pay in full up front (vs. pay on arrival). Only settable if the Stay's country allows it — check fullPaymentAllowedByCountry from getMyStayOrganisationalData first; writing true when the country doesn't allow it will be rejected." }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateHostBusinessProfile",
@@ -2543,7 +2563,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             entityAccount: { type: "boolean", description: "Whether the host operates as a registered business entity" }
           },
           required: []
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2569,7 +2590,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             roomId: { type: "number", description: "Required when area is 'room' — the room's EntryID (use getMyStayRooms to find it). Ignored for other areas." }
           },
           required: ["stayId", "area"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2581,7 +2603,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayContacts",
@@ -2609,7 +2632,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             linkedIn: { type: "string" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayFacilities",
@@ -2621,7 +2645,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             group: { type: "string", description: "Exact facility group name, e.g. 'Languages Spoken', 'General', 'Services', 'Meal', 'Position', 'Remote Worker' (call getFacilityGroups for the full list)" }
           },
           required: ["stayId", "group"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayFacilities",
@@ -2638,27 +2663,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["stayId", "group", "facilityDetailIds"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getFacilityGroups",
         description: "List every facility/checkbox group name that exists on the platform (e.g. 'Languages Spoken', 'General', 'Services', 'Meal', 'Position', 'Remote Worker'). Call this first if you don't already know the exact group name to pass to getMyStayFacilities/updateStayFacilities. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
-        inputSchema: { type: "object", properties: {}, required: [] }
+        inputSchema: { type: "object", properties: {}, required: [] },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStayTypeOptions",
         description: "List valid values for a Stay's 'Main Accommodation Type' (stayTypeId in updateStayOrganisationalData). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
-        inputSchema: { type: "object", properties: {}, required: [] }
+        inputSchema: { type: "object", properties: {}, required: [] },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getCountryOptions",
         description: "List valid values for a Stay's country (countryId in updateStayOrganisationalData), with each country's name and 2-letter code. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
-        inputSchema: { type: "object", properties: {}, required: [] }
+        inputSchema: { type: "object", properties: {}, required: [] },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getCancellationPolicyOptions",
         description: "List valid values for a Stay's cancellation policy (cxPolicyId in updateStayOrganisationalData). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
-        inputSchema: { type: "object", properties: {}, required: [] }
+        inputSchema: { type: "object", properties: {}, required: [] },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getAdditionalInformationOptions",
@@ -2669,12 +2699,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             filterName: { type: "string", enum: ["Children Allowed", "Pets Allowed", "Parking"], description: "Which picklist to fetch options for" }
           },
           required: ["filterName"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getBusinessModelOptions",
         description: "List valid values for a Stay's listing/business model (businessModelId, read-only — displayed on the Stay but not editable via MCP or the host UI itself). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
-        inputSchema: { type: "object", properties: {}, required: [] }
+        inputSchema: { type: "object", properties: {}, required: [] },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayPhotos",
@@ -2685,7 +2717,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID (use getMyStays to find it)" }
           },
           required: ["stayId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "deleteStayPhoto",
@@ -2698,7 +2731,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             fileName: { type: "string", description: "The exact file name from getMyStayPhotos, e.g. '69bdf22cdb0c43a7be3e825a0a3a2074.jpg'" }
           },
           required: ["stayId", "area", "fileName"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }
       },
       {
         name: "reorderStayPhotos",
@@ -2715,7 +2749,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["stayId", "area", "fileNames"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2727,7 +2762,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             productId: { type: "number", description: "The product's EntryID — use 8 for the Stay Application fee" }
           },
           required: ["productId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "purchaseProduct",
@@ -2739,7 +2775,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             applicationId: { type: "number", description: "Optional: if this purchase is paying a Stay Application's fee, pass its applicationId (from createStayApplication) so the payment is applied back to that application automatically once paid" }
           },
           required: ["productId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getPurchaseStatus",
@@ -2750,7 +2787,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             saleId: { type: "string", description: "The saleId returned by purchaseProduct" }
           },
           required: ["saleId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2761,7 +2799,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        _meta: listCardsWidgetMeta
+        _meta: listCardsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStayApplication",
@@ -2772,7 +2811,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             applicationId: { type: "number", description: "The application's ID (use listStayApplications to find it)" }
           },
           required: ["applicationId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createStayApplication",
@@ -2806,7 +2846,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             comments: { type: "string" }
           },
           required: []
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "saveStayApplication",
@@ -2841,7 +2882,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             comments: { type: "string" }
           },
           required: ["applicationId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "submitStayApplication",
@@ -2852,7 +2894,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             applicationId: { type: "number", description: "The application's ID" }
           },
           required: ["applicationId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2863,7 +2906,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        _meta: listCardsWidgetMeta
+        _meta: listCardsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getExperienceApplication",
@@ -2874,7 +2918,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             applicationId: { type: "number", description: "The application's ID (use listExperienceApplications to find it)" }
           },
           required: ["applicationId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createExperienceApplication",
@@ -2912,7 +2957,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             comments: { type: "string" }
           },
           required: []
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "saveExperienceApplication",
@@ -2951,7 +2997,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             comments: { type: "string" }
           },
           required: ["applicationId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "submitExperienceApplication",
@@ -2962,7 +3009,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             applicationId: { type: "number", description: "The application's ID" }
           },
           required: ["applicationId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "quoteStayBooking",
@@ -2980,7 +3028,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["packageId", "checkIn", "checkOut"]
         },
-        _meta: bookingWidgetMeta
+        _meta: bookingWidgetMeta,
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "bookStay",
@@ -2996,7 +3045,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["quoteId"]
         },
-        _meta: bookingWidgetMeta
+        _meta: bookingWidgetMeta,
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getBookingStatus",
@@ -3008,7 +3058,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["pnr"]
         },
-        _meta: bookingWidgetMeta
+        _meta: bookingWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "listMyBookings",
@@ -3018,7 +3069,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        _meta: listCardsWidgetMeta
+        _meta: listCardsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -3029,7 +3081,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        _meta: listCardsWidgetMeta
+        _meta: listCardsWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getCoworkingApplication",
@@ -3040,7 +3093,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             applicationId: { type: "number", description: "The application's ID (use listCoworkingApplications to find it)" }
           },
           required: ["applicationId"]
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createCoworkingApplication",
@@ -3058,7 +3112,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             website: { type: "string" }
           },
           required: []
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "saveCoworkingApplication",
@@ -3077,7 +3132,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             website: { type: "string" }
           },
           required: ["applicationId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "submitCoworkingApplication",
@@ -3088,7 +3144,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             applicationId: { type: "number", description: "The application's ID" }
           },
           required: ["applicationId"]
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       }
     ]
   };
