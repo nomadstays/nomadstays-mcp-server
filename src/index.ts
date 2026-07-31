@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import sql from "mssql";
 import type { Stay } from "./types/stay.js";
 
-// Detect if we're running in HTTP mode (Azure App Service) or stdio mode (MCP Inspector/Client)
+// Detect if we're running in HTTP mode (Coolify container) or stdio mode (MCP Inspector/Client)
 const isHttpMode = !!(process.env.PORT || process.env.HTTP_PORT);
 
 // Load environment from .env file manually to avoid dotenv's stdout pollution in stdio mode
@@ -45,7 +45,7 @@ try {
   }
 }
 
-// Global error handlers for better visibility in App Service logs
+// Global error handlers for better visibility in container logs
 // Only enable in HTTP mode to avoid interfering with stdio JSON-RPC protocol
 if (isHttpMode) {
   process.on('uncaughtException', (err) => {
@@ -1672,7 +1672,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "getStaysByCountry",
-        description: "Returns stays from NomadStays Azure backend. Search by 2-letter country code (e.g., 'MA', 'US') or country name (e.g., 'Antigua' matches 'Antigua and Barbuda')",
+        description: "Returns stays from the NomadStays database. Search by 2-letter country code (e.g., 'MA', 'US') or country name (e.g., 'Antigua' matches 'Antigua and Barbuda')",
         inputSchema: {
           type: "object",
           properties: {
@@ -1690,7 +1690,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "getStaysByContinent",
-        description: "Returns stays from NomadStays Azure backend filtered by continent. Search by continent name (e.g., 'Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania')",
+        description: "Returns stays from the NomadStays database filtered by continent. Search by continent name (e.g., 'Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania')",
         inputSchema: {
           type: "object",
           properties: {
@@ -1708,7 +1708,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "getStaysByLocation",
-        description: "Returns stays from NomadStays Azure backend that match a location search term. Searches across City, State, location_name, location_country, and location_description fields. Use this for flexible location searches (e.g., 'Paris', 'California', 'Beach', 'Mountain')",
+        description: "Returns stays from the NomadStays database that match a location search term. Searches across City, State, location_name, location_country, and location_description fields. Use this for flexible location searches (e.g., 'Paris', 'California', 'Beach', 'Mountain')",
         inputSchema: {
           type: "object",
           properties: {
@@ -1767,7 +1767,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "getStaysByLifestyle",
-        description: "Returns stays from NomadStays Azure backend filtered by lifestyle/genre category (e.g., 'Digital Nomad', 'Beach Life', 'City Living', 'Mountain Retreat'). Each stay can belong to multiple lifestyle categories.",
+        description: "Returns stays from the NomadStays database filtered by lifestyle/genre category (e.g., 'Digital Nomad', 'Beach Life', 'City Living', 'Mountain Retreat'). Each stay can belong to multiple lifestyle categories.",
         inputSchema: {
           type: "object",
           properties: {
@@ -2932,15 +2932,15 @@ const server = createServer();
 
 /**
  * Start the server using stdio transport for local development
- * or HTTP transport for remote access (Azure App Service).
+ * or HTTP transport for remote access (Coolify container).
  */
 async function main() {
     const port = process.env.PORT || process.env.HTTP_PORT;
-    
+
     if (port) {
-      // HTTP mode for Azure App Service - provides REST API endpoints only
+      // HTTP mode for the Coolify-hosted container - provides REST API endpoints only
       const app = express();
-      // Ensure Express trusts proxy headers for accurate req.ip (Azure, etc.)
+      // Ensure Express trusts proxy headers for accurate req.ip
       app.set('trust proxy', true);
         
         // JSON body parser middleware
