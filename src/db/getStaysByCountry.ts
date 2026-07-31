@@ -126,7 +126,7 @@ export async function getStaysByCountry(connStr: string, opts?: { country?: stri
     }
     const query = `
       SELECT TOP (@limit)
-        S.EntryId, S.Title,
+        S.EntryId, S.Title, S.AltTitle, S.ListingStatus,
         S.City, S.CountryCode2Alpha, S.URL, CO.CountryName,
         ISNULL(L.location_name,'MISSING') AS Region,
         S.GeoLat, S.GeoLng,
@@ -164,6 +164,15 @@ export async function getStaysByCountry(connStr: string, opts?: { country?: stri
       const r: any = result.recordset[i];
       // Skip undefined/null rows
       if (!r) continue;
+
+      // Limited Listing rooms/stays are hidden from search and non-bookable —
+      // never expose the real business name via MCP for one, the same masking
+      // applied on the public site (searchresults/staydetail use AltTitle too).
+      if (r.ListingStatus === 'LimitedListing' && r.AltTitle) {
+        r.Title = r.AltTitle;
+      }
+      delete r.AltTitle;
+      delete r.ListingStatus;
 
       if (r.URL) {
         const u = String(r.URL).trim();

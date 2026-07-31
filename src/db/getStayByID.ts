@@ -100,7 +100,7 @@ export async function getStayByID(connStr: string, id: string | number): Promise
 
     const query = `
       SELECT
-        S.EntryId, S.Title, 
+        S.EntryId, S.Title, S.AltTitle, S.ListingStatus,
         ISNULL(L.location_name,'MISSING') AS Region,
         S.City, CO.CountryName, S.CountryCode2Alpha, S.URL,
         S.GeoLat, S.GeoLng,
@@ -122,6 +122,15 @@ export async function getStayByID(connStr: string, id: string | number): Promise
     const result = await req.query(query);
     let rec: any = (result.recordset as Stay[])[0];
     if (!rec) return null;
+
+    // Limited Listing rooms/stays are hidden from search and non-bookable —
+    // never expose the real business name via MCP for one, the same masking
+    // applied on the public site (searchresults/staydetail use AltTitle too).
+    if (rec.ListingStatus === 'LimitedListing' && rec.AltTitle) {
+      rec.Title = rec.AltTitle;
+    }
+    delete rec.AltTitle;
+    delete rec.ListingStatus;
 
     if (rec.URL) {
       const u = String(rec.URL).trim();

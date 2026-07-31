@@ -18,7 +18,7 @@ export async function getStaysByWiFiSpeed(connStr: string, params: {
     const query = `
       SELECT TOP (@limit)
         S.EntryId,
-        S.Title,
+        S.Title, S.AltTitle, S.ListingStatus,
         S.City,
         S.State,
         S.PostCode,
@@ -44,6 +44,17 @@ export async function getStaysByWiFiSpeed(connStr: string, params: {
       ORDER BY S.WiFi_Download_Speed DESC, S.Title
     `;
     const result = await req.query(query);
+    for (const rec of result.recordset as any[]) {
+      if (!rec) continue;
+      // Limited Listing rooms/stays are hidden from search and non-bookable —
+      // never expose the real business name via MCP for one, the same masking
+      // applied on the public site (searchresults/staydetail use AltTitle too).
+      if (rec.ListingStatus === 'LimitedListing' && rec.AltTitle) {
+        rec.Title = rec.AltTitle;
+      }
+      delete rec.AltTitle;
+      delete rec.ListingStatus;
+    }
     return result.recordset as Stay[];
   } finally {
     try { await pool.close(); } catch {}

@@ -126,7 +126,7 @@ export async function getStaysByLocation(connStr: string, opts?: { location?: st
     
     const query = `
       SELECT TOP (@limit)
-        S.EntryId, S.Title,
+        S.EntryId, S.Title, S.AltTitle, S.ListingStatus,
         S.City, S.CountryCode2Alpha, S.URL, CO.CountryName,
         ISNULL(L.location_name,'MISSING') AS Region,
         L.location_country,
@@ -135,7 +135,10 @@ export async function getStaysByLocation(connStr: string, opts?: { location?: st
         S.Address, S.State, S.PostCode, S.TotalRooms AS NumberOfRooms,
         S.PetsAllowed, S.Description,
         S.MainImageName, S.ImageName,
-        P.MinSellPrice AS MinPrice, P.CurrencyFK AS PriceCurrencyFK, P.CurrencyCode AS PriceCurrencyCode,
+        PW.MinSellPrice AS WeeklyPrice, PW.CurrencyCode AS WeeklyCurrencyCode,
+        PM.MinSellPrice AS MonthlyPrice, PM.CurrencyCode AS MonthlyCurrencyCode,
+        ISNULL(PM.CurrencyFK, PW.CurrencyFK) AS PriceCurrencyFK,
+        ISNULL(PM.CurrencyCode, PW.CurrencyCode) AS PriceCurrencyCode,
         -- aggregated amenities (comma separated)
         (SELECT STRING_AGG(fd.FacilityDetailName, ',') FROM tbStaysFacilities sf INNER JOIN tbFacilityDetails fd ON sf.FacilityDetailFK = fd.EntryID WHERE sf.StayFK = S.EntryId AND sf.IsDeleted = 0 AND fd.IsDeleted = 0 AND fd.FacilityFK != 9) AS Amenities,
         PD.AdditionalInformationDetailName AS PetsAllowedName,
@@ -145,19 +148,27 @@ export async function getStaysByLocation(connStr: string, opts?: { location?: st
       LEFT JOIN Location L ON S.LocationID = L.location_id
       LEFT JOIN tbAdditionalInformationDetail PD ON PD.EntryID = S.PetsAllowed
       LEFT JOIN (
-        SELECT p.StayFK, MIN(sp.SellPrice) AS MinSellPrice, MIN(sp.Days) AS Days, MIN(p.CurrencyFK) AS CurrencyFK, MAX(C.CurrencyCode) AS CurrencyCode
+        SELECT p.StayFK, MIN(sp.SellPrice) AS MinSellPrice, MIN(p.CurrencyFK) AS CurrencyFK, MAX(C.CurrencyCode) AS CurrencyCode
         FROM tbStayPrices sp
         INNER JOIN tbStayPackages p ON sp.StayPackagesFK = p.EntryID
         LEFT JOIN tbCurrencies C ON p.CurrencyFK = C.EntryID
-        WHERE sp.Listed = 1 AND sp.Days = 7
+        WHERE sp.Listed = 1 AND sp.Days = 7 AND sp.SellPrice >= 10
         GROUP BY p.StayFK
-      ) P ON P.StayFK = S.EntryId
-      WHERE S.IsDeleted != 'true' ${whereLocation}
-      ORDER BY 
+      ) PW ON PW.StayFK = S.EntryId
+      LEFT JOIN (
+        SELECT p.StayFK, MIN(sp.SellPrice) AS MinSellPrice, MIN(p.CurrencyFK) AS CurrencyFK, MAX(C.CurrencyCode) AS CurrencyCode
+        FROM tbStayPrices sp
+        INNER JOIN tbStayPackages p ON sp.StayPackagesFK = p.EntryID
+        LEFT JOIN tbCurrencies C ON p.CurrencyFK = C.EntryID
+        WHERE sp.Listed = 1 AND sp.Days = 30 AND sp.SellPrice >= 10
+        GROUP BY p.StayFK
+      ) PM ON PM.StayFK = S.EntryId
+      WHERE S.IsDeleted != 'true' AND S.Title != 'Sample Surf Camper' ${whereLocation}
+      ORDER BY
         CASE WHEN S.WiFi_Download_Speed IS NULL OR S.WiFi_Download_Speed = '' THEN 1 ELSE 0 END,
         S.WiFi_Download_Speed DESC,
-        CASE WHEN P.MinSellPrice IS NULL THEN 1 ELSE 0 END,
-        P.MinSellPrice DESC
+        CASE WHEN ISNULL(PM.MinSellPrice, PW.MinSellPrice) IS NULL THEN 1 ELSE 0 END,
+        ISNULL(PM.MinSellPrice, PW.MinSellPrice) DESC
     `; 
 
     const result = await req.query(query);
@@ -166,6 +177,15 @@ export async function getStaysByLocation(connStr: string, opts?: { location?: st
       const r: any = result.recordset[i];
       // Skip undefined/null rows
       if (!r) continue;
+
+      // Limited Listing rooms/stays are hidden from search and non-bookable —
+      // never expose the real business name via MCP for one, the same masking
+      // applied on the public site (searchresults/staydetail use AltTitle too).
+      if (r.ListingStatus === 'LimitedListing' && r.AltTitle) {
+        r.Title = r.AltTitle;
+      }
+      delete r.AltTitle;
+      delete r.ListingStatus;
 
       if (r.URL) {
         const u = String(r.URL).trim();
@@ -219,41 +239,28 @@ export async function getStaysByLocation(connStr: string, opts?: { location?: st
         r.PetsAllowed = null;
       }
 
-      // Build priceRange and priceCurrency (convert to USD per week when exchange rates configured)
+      // Build priceRange with both weekly and monthly where available
       try {
-        const min = r.MinPrice != null ? Number(r.MinPrice) : null;
+        const weeklyRaw = r.WeeklyPrice != null ? Number(r.WeeklyPrice) : null;
+        const monthlyRaw = r.MonthlyPrice != null ? Number(r.MonthlyPrice) : null;
         const origCurrency = (r.PriceCurrencyCode ?? null) || null;
-        const targetCurrency = 'USD';
 
-        // MinPrice is already for 7 days (filtered in query), no need to multiply
-        let weekly = min != null ? Math.round(min) : null;
+        const weekly = weeklyRaw != null ? Math.round(weeklyRaw) : null;
+        const monthly = monthlyRaw != null ? Math.round(monthlyRaw) : null;
 
-        // support optional env var to provide conversion rates to USD, JSON map like {"EUR":1.08}
-        let convertedWeeklyUsd: number | null = null;
-        try {
-          const ratesJson = process.env.NOMADSTAYS_EXCHANGE_RATES ?? null;
-          if (ratesJson && origCurrency && origCurrency !== targetCurrency) {
-            const rates = JSON.parse(ratesJson);
-            const rateToUsd = rates[origCurrency];
-            if (rateToUsd && typeof rateToUsd === 'number') {
-              convertedWeeklyUsd = Math.round((min ?? 0) * rateToUsd);
-            }
-          }
-        } catch { /* ignore malformed env */ }
+        const cur = origCurrency ?? 'EUR';
 
-        // Decide final range display
-        if (convertedWeeklyUsd != null) {
-          r.priceRange = `From ${targetCurrency} $${convertedWeeklyUsd} per week`;
-          r.priceCurrency = targetCurrency;
-        } else if (origCurrency) {
-          // use original currency if we can't convert
-          r.priceRange = weekly != null ? `From ${origCurrency} ${weekly} per week` : null;
-          r.priceCurrency = origCurrency;
-        } else {
-          // default to USD using weekly numeric (no true conversion available)
-          r.priceRange = weekly != null ? `From ${targetCurrency} $${weekly} per week` : null;
-          r.priceCurrency = targetCurrency;
-        }
+        const parts: string[] = [];
+        if (weekly != null) parts.push(`${cur} ${weekly} per week`);
+        if (monthly != null) parts.push(`${cur} ${monthly} per month`);
+        r.priceRange = parts.length > 0 ? `From ${parts.join(' / ')}` : null;
+        r.priceCurrency = cur;
+
+        // Clean up raw DB fields
+        delete r.WeeklyPrice;
+        delete r.MonthlyPrice;
+        delete r.WeeklyCurrencyCode;
+        delete r.MonthlyCurrencyCode;
 
         // Build minimal JSON-LD for listing consumers
         try {

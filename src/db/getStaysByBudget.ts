@@ -192,7 +192,7 @@ export async function getStaysByBudget(connStr: string, params: {
     const query = `
       SELECT TOP (@limit)
         S.EntryId,
-        S.Title,
+        S.Title, S.AltTitle, S.ListingStatus,
         S.City,
         S.State,
         S.PostCode,
@@ -244,8 +244,16 @@ export async function getStaysByBudget(connStr: string, params: {
     // Filter by price and currency, applying FX conversion
     const availableStays = [];
     
-    for (const r of result.recordset) {
+    for (const r of result.recordset as any[]) {
       try {
+        // Limited Listing rooms/stays are hidden from search and non-bookable —
+        // never expose the real business name via MCP for one, the same masking
+        // applied on the public site (searchresults/staydetail use AltTitle too).
+        if (r.ListingStatus === 'LimitedListing' && r.AltTitle) {
+          r.Title = r.AltTitle;
+        }
+        delete r.AltTitle;
+        delete r.ListingStatus;
         // Since the main query already filters for S.Listed = 1 and prices with sp.Listed = 1,
         // we can trust that this stay has bookable inventory
         // For budget searches, we prioritize getting results over strict availability checking

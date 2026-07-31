@@ -101,12 +101,12 @@ export async function getRoomAvailability(connStr: string, params: {
     
     // Get the stay and room info first to find the room's StayFK and RoomTypeFK
     const roomInfoQuery = `
-      SELECT TOP 1 SR.StayFK, SR.RoomTypeFK
+      SELECT TOP 1 SR.StayFK, SR.RoomTypeFK, SR.ListingStatus
       FROM tbStaysRoom SR
       WHERE SR.EntryID = @roomId
       AND SR.IsDeleted = 0
     `;
-    
+
     const roomInfoResult = await req.query(roomInfoQuery);
     if (!roomInfoResult.recordset || roomInfoResult.recordset.length === 0) {
       return {
@@ -119,8 +119,20 @@ export async function getRoomAvailability(connStr: string, params: {
         error: 'Room not found'
       };
     }
-    
-    const { StayFK, RoomTypeFK } = roomInfoResult.recordset[0];
+
+    const { StayFK, RoomTypeFK, ListingStatus } = roomInfoResult.recordset[0];
+
+    if (ListingStatus && ListingStatus !== 'Live') {
+      return {
+        roomId: params.roomId,
+        checkIn: params.checkIn,
+        checkOut: params.checkOut,
+        totalNights: 0,
+        availableNights: 0,
+        availability: [],
+        error: 'Room is not currently bookable (Limited Listing)'
+      };
+    }
     
     req.input('stayId', sql.Int, StayFK);
     req.input('roomTypeFK', sql.Int, RoomTypeFK);
@@ -141,7 +153,7 @@ export async function getRoomAvailability(connStr: string, params: {
         SET @CheckDate = DATEADD(day, 1, @CheckDate)
       END
       
-      SELECT 
+      SELECT
         dr.CheckDate,
         CASE WHEN EXISTS (
           SELECT 1 FROM tbStayPackages p
@@ -155,6 +167,20 @@ export async function getRoomAvailability(connStr: string, params: {
             AND B.IsDeleted = 0
             AND CAST(B.CheckInDate AS DATE) <= dr.CheckDate
             AND CAST(DATEADD(Day, B.Night - 1, B.CheckInDate) AS DATE) >= dr.CheckDate
+          )
+          -- tbBooking is only populated by the site's post-payment ThankYouForBooking flow,
+          -- which lags or never runs for many guest bookings (confirmed live: most
+          -- IsConfirmed=1 tbBookingReservations rows have no matching tbBooking row at all —
+          -- that's the pre-payment/first-stage table, not a duplicate). A room already
+          -- paid-and-held there must also block here.
+          AND NOT EXISTS (
+            SELECT 1 FROM tbBookingReservations R
+            WHERE R.PackageFK = p.EntryID
+            AND R.IsConfirmed = 1
+            AND ISNULL(R.IsDeleted, 0) = 0
+            AND CAST(R.CheckInDate AS DATE) <= dr.CheckDate
+            AND CAST(DATEADD(Day, R.Night - 1, R.CheckInDate) AS DATE) >= dr.CheckDate
+            AND NOT EXISTS (SELECT 1 FROM tbBooking B2 WHERE B2.BookingPNR = R.BookingPNR)
           )
         ) THEN 1 ELSE 0 END as Available
       FROM #DateRange dr

@@ -156,7 +156,7 @@ export async function getStaysByAmenities(connStr: string, params: {
       )
       SELECT
         S.EntryId,
-        S.Title,
+        S.Title, S.AltTitle, S.ListingStatus,
         S.City,
         S.State,
         S.PostCode,
@@ -215,9 +215,13 @@ export async function getStaysByAmenities(connStr: string, params: {
 
     // Format results
     const staysWithAmenities = result.recordset.map((r: any) => {
+      // Limited Listing rooms/stays are hidden from search and non-bookable —
+      // never expose the real business name via MCP for one, the same masking
+      // applied on the public site (searchresults/staydetail use AltTitle too).
+      const title = (r.ListingStatus === 'LimitedListing' && r.AltTitle) ? r.AltTitle : r.Title;
       const orderedStay = {
         EntryId: r.EntryId,
-        Title: r.Title,
+        Title: title,
         City: r.City,
         State: r.State,
         PostCode: r.PostCode,

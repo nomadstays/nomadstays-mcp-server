@@ -103,6 +103,7 @@ export async function checkStayAvailability(connStr: string, params: {
       FROM tbStaysRoom SR
       WHERE SR.StayFK = @stayId
       AND SR.IsDeleted = 0
+      AND SR.ListingStatus = 'Live'
       AND EXISTS (
         SELECT 1 FROM tbStayPackages p
         WHERE p.RoomTypeFK = SR.RoomTypeFK
@@ -115,6 +116,20 @@ export async function checkStayAvailability(connStr: string, params: {
           AND B.IsDeleted = 0
           AND CAST(DATEADD(Day, B.Night - 1, B.CheckInDate) AS DATE) > @checkInDate
           AND CAST(B.CheckInDate AS DATE) < @checkOutDate
+        )
+        -- tbBooking is only populated by the site's post-payment ThankYouForBooking flow, which
+        -- lags or never runs for many guest bookings (confirmed live: most of a large sample of
+        -- IsConfirmed=1 tbBookingReservations rows have no matching tbBooking row at all, since
+        -- that's the pre-payment/first-stage table, not a duplicate). A room already paid-and-held
+        -- there must also block here, or this tool tells an agent a room is free when it isn't.
+        AND NOT EXISTS (
+          SELECT 1 FROM tbBookingReservations R
+          WHERE R.PackageFK = p.EntryID
+          AND R.IsConfirmed = 1
+          AND ISNULL(R.IsDeleted, 0) = 0
+          AND CAST(DATEADD(Day, R.Night - 1, R.CheckInDate) AS DATE) > @checkInDate
+          AND CAST(R.CheckInDate AS DATE) < @checkOutDate
+          AND NOT EXISTS (SELECT 1 FROM tbBooking B2 WHERE B2.BookingPNR = R.BookingPNR)
         )
       )
       ORDER BY SR.EntryID
