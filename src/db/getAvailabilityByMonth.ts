@@ -120,6 +120,18 @@ export async function getAvailabilityByMonth(connStr: string, params: {
                 AND CAST(DATEADD(Day, B.Night - 1, B.CheckInDate) AS DATE) > @checkInDate
                 AND CAST(B.CheckInDate AS DATE) < @checkOutDate
             )
+            -- tbBooking is only populated by the site's post-payment ThankYouForBooking flow,
+            -- which lags or never runs for many guest bookings — tbBookingReservations is the
+            -- pre-payment/first-stage table where IsConfirmed=1 already means the room is held.
+            AND NOT EXISTS (
+              SELECT 1 FROM tbBookingReservations R
+              WHERE R.PackageFK = p.EntryID
+                AND R.IsConfirmed = 1
+                AND ISNULL(R.IsDeleted, 0) = 0
+                AND CAST(DATEADD(Day, R.Night - 1, R.CheckInDate) AS DATE) > @checkInDate
+                AND CAST(R.CheckInDate AS DATE) < @checkOutDate
+                AND NOT EXISTS (SELECT 1 FROM tbBooking B2 WHERE B2.BookingPNR = R.BookingPNR)
+            )
         )
     `;
 

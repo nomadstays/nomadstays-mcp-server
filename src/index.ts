@@ -10,7 +10,8 @@ const isHttpMode = !!(process.env.PORT || process.env.HTTP_PORT);
 
 // Load environment from .env file manually to avoid dotenv's stdout pollution in stdio mode
 // This is critical because any stdout output breaks the JSON-RPC protocol over stdio
-try {
+// Skip in HTTP mode — env vars come from the host (Coolify/Docker)
+if (!isHttpMode) try {
   const envPath = resolve('.env');
   const envContent = readFileSync(envPath, 'utf8');
   
@@ -39,8 +40,8 @@ try {
     }
   });
 } catch (err: any) {
-  // Silently fail if .env doesn't exist - only log in HTTP mode
-  if (isHttpMode && err?.code !== 'ENOENT') {
+  // Silently fail if .env doesn't exist
+  if (err?.code !== 'ENOENT') {
     console.warn('Failed to load .env file:', err?.message);
   }
 }
