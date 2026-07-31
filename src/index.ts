@@ -3229,6 +3229,20 @@ async function main() {
             res.json(protectedResourceMetadata);
         });
 
+        // OpenAI ChatGPT Apps SDK submission portal domain-verification challenge.
+        // The portal generates a token when you enter this domain during "With MCP"
+        // submission and expects it served back as plain text (not JSON/HTML) at this
+        // exact path. Set OPENAI_APPS_CHALLENGE_TOKEN in Coolify once the portal shows
+        // it — no redeploy needed for a token rotation, just update the env var.
+        app.get('/.well-known/openai-apps-challenge', (req, res) => {
+            const token = process.env.OPENAI_APPS_CHALLENGE_TOKEN;
+            if (!token) {
+                res.status(404).send('Not found');
+                return;
+            }
+            res.type('text/plain').send(token);
+        });
+
         // Health check endpoint
         app.get('/health', (req, res) => {
             res.json({ 
