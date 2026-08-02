@@ -2309,7 +2309,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             stayId: { type: "number", description: "The Stay's EntryID" },
             roomTitle: { type: "string", description: "Room name/title" },
             roomDescription: { type: "string", description: "OPTIONAL: room description" },
-            roomTypeFK: { type: "number", description: "OPTIONAL: a roomTypeId from getRoomTypeOptions(stayId). IGNORED for boutique Stays — the next available Boutique1-6 slot is auto-assigned server-side, matching the host UI (which has no room-type picker for boutique room creation)." },
+            roomTypeFK: { type: "number", description: "REQUIRED for non-boutique Stays — a roomTypeId from getRoomTypeOptions(stayId). IGNORED for boutique Stays — the next available Boutique1-6 slot is auto-assigned server-side, matching the host UI (which has no room-type picker for boutique room creation)." },
             beds: { type: "number", description: "OPTIONAL: number of beds" },
             maxPerson: { type: "number", description: "OPTIONAL: max occupancy" },
             mainBedSize: { type: "string", enum: ["Single", "Double", "Twin", "Queen", "King", "Other"], description: "OPTIONAL: main bed size" },
