@@ -3192,6 +3192,16 @@ async function main() {
         app.use(createTrackingMiddleware(requestLogger));
         
         // CORS middleware - apply to all responses
+        //
+        // Only allowlisted browser origins get Access-Control-Allow-Origin at all — there used
+        // to be an `else` branch sending `*` to every other origin (commented "Allow all origins
+        // for API testing"), which undermined the allowlist above it and was also spec-invalid
+        // in combination with Access-Control-Allow-Credentials: true below (browsers refuse a
+        // credentialed response when the origin echoed back is a literal `*`, so it silently
+        // didn't even work for its stated purpose). Non-browser MCP clients (Claude.ai, ChatGPT,
+        // curl, server-to-server calls) don't enforce CORS at all, so removing the wildcard only
+        // closes off malicious browser-based cross-origin use of a signed-in user's cookies —
+        // it doesn't block any legitimate agent traffic, which was never CORS-gated to begin with.
         app.use((req, res, next) => {
             const allowedOrigins = [
                 'https://mcp.nomadstays.com',
@@ -3203,13 +3213,10 @@ async function main() {
             const origin = req.headers.origin;
             if (origin && allowedOrigins.includes(origin)) {
                 res.header('Access-Control-Allow-Origin', origin);
-            } else {
-                // Allow all origins for API testing
-                res.header('Access-Control-Allow-Origin', '*');
+                res.header('Access-Control-Allow-Credentials', 'true');
             }
             res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
             res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, mcp-protocol-version');
-            res.header('Access-Control-Allow-Credentials', 'true');
             res.header('Cache-Control', 'no-cache');
             if (req.method === 'OPTIONS') {
                 res.sendStatus(200);
