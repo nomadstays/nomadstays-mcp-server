@@ -21,7 +21,8 @@
     "archiver": "^7.0.1",
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",
-    "mssql": "^12.2.0"
+    "express-rate-limit": "^8.6.2",
+    "mssql": "^12.7.0"
   },
   "devDependencies": {
     "@modelcontextprotocol/inspector": "^0.18.0",

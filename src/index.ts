@@ -82,6 +82,7 @@ import { createStatsEndpoints } from "./tracking/statsEndpoints.js";
 import { runWithRequestAgentToken } from "./tracking/requestTokenContext.js";
 import { requestCallsProtectedTool } from "./auth/protectedTools.js";
 import { isTokenAcceptable, RESOURCE_URI } from "./auth/introspect.js";
+import { mcpEndpointLimiter, isSignupRateLimited, requestCallsSignup } from "./auth/rateLimit.js";
 import {
   STAY_RESULTS_TEMPLATE_URI,
   stayResultsWidgetMeta,
@@ -3171,8 +3172,12 @@ async function main() {
     if (port) {
       // HTTP mode for the Coolify-hosted container - provides REST API endpoints only
       const app = express();
-      // Ensure Express trusts proxy headers for accurate req.ip
-      app.set('trust proxy', true);
+      // Trust exactly one hop (Coolify's reverse proxy) so req.ip resolves to the real client
+      // IP from X-Forwarded-For. `true` (trust every hop) previously let a caller spoof its own
+      // X-Forwarded-For and forge whatever IP it wanted — express-rate-limit refuses to start
+      // with that setting for exactly this reason (ERR_ERL_PERMISSIVE_TRUST_PROXY), since a
+      // spoofed IP defeats the per-IP throttles below entirely.
+      app.set('trust proxy', 1);
         
         // JSON body parser middleware
         // 27mb accommodates uploadStayPhoto's base64 payloads: a 20MB image (the app's own
@@ -3272,7 +3277,7 @@ async function main() {
         // Stateless mode (sessionIdGenerator: undefined) requires a FRESH transport per
         // request — reusing one instance across requests causes message ID collisions
         // between callers, since there is no session to correlate them by.
-        app.post('/mcp', async (req, res) => {
+        app.post('/mcp', mcpEndpointLimiter, async (req, res) => {
             try {
                 const authHeader = req.headers['authorization'];
                 const bearerMatch = typeof authHeader === 'string' ? authHeader.match(/^Bearer\s+(.+)$/i) : null;
@@ -3296,6 +3301,23 @@ async function main() {
                             id: req.body?.id ?? null,
                         });
                     return;
+                }
+
+                // signupNomadStaysAccount is unauthenticated by design (no token can exist yet —
+                // that's the entire reason the tool exists), so the mcpEndpointLimiter above is
+                // its only other defense against being hammered for account-creation spam. Applies
+                // the same tighter per-IP window Program.cs's "agent-signup" ASP.NET policy already
+                // uses for this exact flow on the main web app.
+                if (requestCallsSignup(req.body)) {
+                    const clientIp = req.ip || (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+                    if (isSignupRateLimited(clientIp)) {
+                        res.status(429).json({
+                            jsonrpc: '2.0',
+                            error: { code: -32029, message: 'Too many signup attempts. Please try again in a few minutes.' },
+                            id: req.body?.id ?? null,
+                        });
+                        return;
+                    }
                 }
 
                 // Fresh Server per request — see createServer()'s doc comment for why sharing

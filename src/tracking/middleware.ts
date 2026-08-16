@@ -1,6 +1,38 @@
 import { Request, Response, NextFunction } from 'express';
 import { MCPRequestLogger } from './requestLogger.js';
 
+// Tool argument keys that must never reach tbMCPRequestTracking in plaintext — currently just
+// signupNomadStaysAccount's password, but matched case-insensitively so a differently-cased or
+// future credential-shaped field (token, secret, apiKey, ...) is caught too rather than only
+// the one field known today.
+const SENSITIVE_KEY_PATTERN = /password|secret|token|apikey|api_key/i;
+
+// Large string values (base64 photo payloads chief among them) bloat tbMCPRequestTracking with
+// bytes nobody queries by, and there's no reason for that raw image data to sit in a log table.
+// Redact rather than drop the key entirely so the log still shows a tool call happened with a
+// photo attached, just not the photo itself.
+const MAX_LOGGED_STRING_LENGTH = 200;
+
+/** Deep-clones req.body.params, replacing sensitive/oversized values with a placeholder before logging. */
+function redactRequestParams(value: unknown, keyName?: string): unknown {
+    if (typeof value === 'string') {
+        if (keyName && SENSITIVE_KEY_PATTERN.test(keyName)) return '[REDACTED]';
+        if (value.length > MAX_LOGGED_STRING_LENGTH) return `[REDACTED: ${value.length} chars]`;
+        return value;
+    }
+    if (Array.isArray(value)) {
+        return value.map((item) => redactRequestParams(item));
+    }
+    if (value && typeof value === 'object') {
+        const result: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+            result[k] = redactRequestParams(v, k);
+        }
+        return result;
+    }
+    return value;
+}
+
 /**
  * Express middleware to track MCP requests
  */
@@ -74,7 +106,7 @@ export function createTrackingMiddleware(logger: MCPRequestLogger) {
                 sessionId,
                 toolName,
                 requestMethod,
-                requestParams: req.body?.params,
+                requestParams: redactRequestParams(req.body?.params),
                 clientIP,
                 userAgent,
                 agentId,
