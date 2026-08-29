@@ -114,7 +114,7 @@ export async function getStaysByLocation(connStr: string, opts?: { location?: st
     let whereLocation = '';
     if (location) {
       const searchTerm = String(location).trim();
-      req.input('locationSearchPattern', sql.VarChar(100), `%${searchTerm}%`);
+      req.input('locationSearchPattern', sql.VarChar(sql.MAX), `%${searchTerm}%`);
       whereLocation = `AND (
         S.City LIKE @locationSearchPattern 
         OR S.State LIKE @locationSearchPattern 
