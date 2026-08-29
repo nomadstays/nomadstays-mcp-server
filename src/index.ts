@@ -677,6 +677,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   if (request.params.name === "getStaysByBudget") {
     const countryCode = request.params.arguments?.countryCode ?? null;
+    const continent = request.params.arguments?.continent ?? null;
     const durationDays = Number(request.params.arguments?.durationDays) || null;
     const maxPrice = Number(request.params.arguments?.maxPrice) || null;
     const currency = request.params.arguments?.currency ?? null;
@@ -696,9 +697,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     try {
       const { getStaysByBudget } = await import('./db/getStaysByBudget.js');
-      const stays = await getStaysByBudget(connStr, { 
-        countryCode: countryCode ? String(countryCode) : null, 
-        durationDays, 
+      const stays = await getStaysByBudget(connStr, {
+        countryCode: countryCode ? String(countryCode) : null,
+        continent: continent ? String(continent) : null,
+        durationDays,
         maxPrice, 
         currency: String(currency), 
         checkInDate: checkInDate ? String(checkInDate) : null,
@@ -1975,6 +1977,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             countryCode: {
               type: "string",
               description: "OPTIONAL: 2-letter country code (e.g., 'ES', 'PT') or country name (e.g., 'Spain'). If omitted, searches all countries globally."
+            },
+            continent: {
+              type: "string",
+              description: "OPTIONAL: Continent name (e.g., 'Europe', 'Asia', 'Africa'). Filters results to stays in countries on this continent. If omitted, searches all continents globally."
             },
             durationDays: {
               type: "number",

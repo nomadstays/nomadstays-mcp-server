@@ -108,6 +108,7 @@ function parseCheckInDate(input?: string | null): Date {
 
 export async function getStaysByBudget(connStr: string, params: {
   countryCode?: string | null;
+  continent?: string | null;
   durationDays: number;
   maxPrice: number;
   currency: string;
@@ -183,10 +184,16 @@ export async function getStaysByBudget(connStr: string, params: {
       req.input('countryCode', sql.VarChar(100), params.countryCode);
       countryFilter = `
         AND (
-          S.CountryCode2Alpha = @countryCode 
+          S.CountryCode2Alpha = @countryCode
           OR CO.CountryName LIKE '%' + @countryCode + '%'
         )
       `;
+    }
+
+    let continentFilter = '';
+    if (params.continent) {
+      req.input('continentSearchPattern', sql.VarChar(sql.MAX), `%${String(params.continent).trim()}%`);
+      continentFilter = `AND CO.CountryContinent LIKE @continentSearchPattern`;
     }
 
     const query = `
@@ -224,6 +231,7 @@ export async function getStaysByBudget(connStr: string, params: {
       AND S.TotalRooms >= 1
       AND S.Listed = 1
       ${countryFilter}
+      ${continentFilter}
       ORDER BY S.Title
     `;
 
