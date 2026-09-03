@@ -164,6 +164,8 @@ export async function hasAvailabilityInWindow(connStr: string, params: {
       ORDER BY PackageFK, BusyStart
     `;
     const busyReq = pool.request();
+    busyReq.input('fromDate', sql.Date, fromDate);
+    busyReq.input('toDate', sql.Date, toDate);
     const busyResult = await busyReq.query(busySql);
     const busyRows: { PackageFK: number; BusyStart: Date; BusyEnd: Date }[] = busyResult.recordset || [];
 
