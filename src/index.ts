@@ -563,6 +563,45 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "hasAvailabilityInWindow") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    const fromDate = request.params.arguments?.fromDate ?? null;
+    const windowDays = Number(request.params.arguments?.windowDays) || 180;
+    const minLengthOfStay = Number(request.params.arguments?.minLengthOfStay) || null;
+
+    if (!stayId) throw new Error("Tool 'hasAvailabilityInWindow' requires 'stayId' argument");
+    if (!fromDate) throw new Error("Tool 'hasAvailabilityInWindow' requires 'fromDate' argument");
+    if (!minLengthOfStay) throw new Error("Tool 'hasAvailabilityInWindow' requires 'minLengthOfStay' argument");
+
+    const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
+    let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
+    connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
+    if (!connStr) {
+      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
+    }
+
+    try {
+      const { hasAvailabilityInWindow } = await import('./db/hasAvailabilityInWindow.js');
+      const result = await hasAvailabilityInWindow(connStr, {
+        stayId: String(stayId),
+        fromDate: String(fromDate),
+        windowDays,
+        minLengthOfStay
+      });
+
+      return {
+        content: [{
+          type: "text" as const,
+          text: JSON.stringify(result)
+        }],
+        structuredContent: result,
+        _meta: availabilityToolInvocationMeta
+      };
+    } catch (err: any) {
+      throw new Error(`DB query failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   if (request.params.name === "findNearestAvailability") {
     const stayId = request.params.arguments?.stayId ?? null;
     const preferredCheckIn = request.params.arguments?.preferredCheckIn ?? null;
@@ -2108,6 +2147,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["stayId", "checkIn", "checkOut"]
         },
         _meta: availabilityWidgetMeta,
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+      },
+
+      {
+        name: "hasAvailabilityInWindow",
+        description: "Efficiently checks whether a stay has ANY open booking window of a minimum length within a date range, without checking every single day. Use this to filter search results down to stays with real availability somewhere in the near future (e.g. 'available at all in the next 6 months for a month-long stay'), instead of calling checkStayAvailability repeatedly for individual dates.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: {
+              type: "string",
+              description: "The unique identifier of the stay"
+            },
+            fromDate: {
+              type: "string",
+              description: "Start of the search window, ISO format (YYYY-MM-DD). Usually today's date."
+            },
+            windowDays: {
+              type: "number",
+              description: "How many days forward from fromDate to search (default: 180, i.e. 6 months)"
+            },
+            minLengthOfStay: {
+              type: "number",
+              description: "Minimum length of stay in days required (e.g. 30 for a month-long stay)"
+            }
+          },
+          required: ["stayId", "fromDate", "minLengthOfStay"]
+        },
         annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
