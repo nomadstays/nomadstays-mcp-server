@@ -104,11 +104,17 @@ export async function checkStayAvailability(connStr: string, params: {
       WHERE SR.StayFK = @stayId
       AND SR.IsDeleted = 0
       AND SR.ListingStatus = 'Live'
+      AND SR.iCalLastError IS NULL
       AND EXISTS (
         SELECT 1 FROM tbStayPackages p
+        INNER JOIN tbStayPrices sp ON sp.StayPackagesFK = p.EntryID
         WHERE p.RoomTypeFK = SR.RoomTypeFK
         AND p.StayFK = SR.StayFK
         AND p.IsActive = 1
+        AND (p.Suspended IS NULL OR p.Suspended = 0)
+        AND sp.Listed = 1
+        AND (p.FixedStartDate IS NULL OR p.FixedStartDate = 0)
+        AND p.EndDate >= @checkInDate
         AND NOT EXISTS (
           SELECT 1 FROM tbBooking B
           WHERE B.PackageFK = p.EntryID
