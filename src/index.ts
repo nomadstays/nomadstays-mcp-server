@@ -175,7 +175,7 @@ function createServer(): Server {
   const server = new Server(
   {
     name: "nomadstays-mcp-server",
-    version: "0.7.0",
+    version: "0.8.0",
   },
   {
     capabilities: {
@@ -3420,7 +3420,7 @@ async function main() {
                 status: 'ok', 
                 service: 'nomadstays-mcp-server',
                 timestamp: new Date().toISOString(),
-                version: '0.7.0',
+                version: '0.8.0',
                 transport: 'streamable-http',
                 endpoints: {
                     mcp: '/mcp',
