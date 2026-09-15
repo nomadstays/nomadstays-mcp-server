@@ -1,5 +1,7 @@
 # NomadStays MCP Server
 
+[![MCP Queen operational grade](https://mcpqueen.com/badge/io.github.nomadstays/mcp-server.svg)](https://mcpqueen.com/s/io.github.nomadstays/mcp-server)
+
 An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that gives AI agents access to Nomad Stays accommodation data — search by country, continent, location, lifestyle, budget, amenities, and availability.
 
 Compatible with **Claude**, **ChatGPT**, and any MCP-aware AI agent.
