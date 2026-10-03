@@ -72,7 +72,9 @@ import {
   CallToolRequestSchema,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
-  ListToolsRequestSchema
+  ListToolsRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema
 } from "@modelcontextprotocol/sdk/types.js";
 import express from "express";
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
@@ -108,6 +110,12 @@ import {
   listCardsWidgetHtml,
   buildListCardsStructuredContent,
 } from "./widgets/listCardsWidget.js";
+import {
+  ONBOARDING_GUIDE_URI,
+  ONBOARDING_PROMPT_NAME,
+  onboardingGuideMarkdown,
+  buildOnboardingPromptText,
+} from "./guides/onboardNewStay.js";
 
 
 /**
@@ -180,8 +188,15 @@ function createServer(): Server {
   {
     capabilities: {
       resources: {},
-      tools: {}
+      tools: {},
+      prompts: {}
     },
+    instructions:
+      "Nomad Stays: search, check availability and book long-stay accommodation for digital nomads, " +
+      "and let Stay Partners manage their own listings. If you are helping a Stay owner list or set up a " +
+      `new property, read the onboarding briefing first: the '${ONBOARDING_PROMPT_NAME}' prompt or the ` +
+      `resource ${ONBOARDING_GUIDE_URI}. It gives the order of steps, which tools to call, and which ` +
+      "steps only the owner can do on the website.",
   }
 );
 
@@ -1747,6 +1762,12 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
       description: "Generic list-of-records widget markup",
       _meta: listCardsWidgetMeta,
     },
+    {
+      uri: ONBOARDING_GUIDE_URI,
+      mimeType: "text/markdown",
+      name: "Onboarding a new Stay (guide for AI agents)",
+      description: "Step-by-step briefing for a Stay Partner's AI agent: account, application, approval, building the listing, checking progress, and rules.",
+    },
   ];
 
   // Try to include stays from DB if a connection is configured
@@ -1858,6 +1879,16 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     };
   }
 
+  if (request.params.uri === ONBOARDING_GUIDE_URI) {
+    return {
+      contents: [{
+        uri: ONBOARDING_GUIDE_URI,
+        mimeType: "text/markdown",
+        text: onboardingGuideMarkdown,
+      }],
+    };
+  }
+
   const id = url.pathname.replace(/^\//, '');
 
   // Validate stay id early to avoid misleading "Stay undefined not found" errors
@@ -1900,6 +1931,36 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   }
 
   throw new Error(`Unknown resource type: ${url.protocol}`);
+});
+
+/**
+ * Prompts: the Stay onboarding briefing (see guides/onboardNewStay.ts).
+ */
+server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+  prompts: [{
+    name: ONBOARDING_PROMPT_NAME,
+    title: "Onboard a new Stay",
+    description: "Walks your AI agent through listing a new Stay on Nomad Stays: account, application and fee, approval, then building rooms, packages and photos until the listing is ready to go live.",
+    arguments: [{
+      name: "stayId",
+      description: "OPTIONAL: the Stay's EntryID if it has already been approved and you only need to finish building the listing",
+      required: false,
+    }],
+  }],
+}));
+
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  if (request.params.name !== ONBOARDING_PROMPT_NAME) {
+    throw new Error(`Unknown prompt: ${request.params.name}`);
+  }
+  const stayId = request.params.arguments?.stayId?.trim() || undefined;
+  return {
+    description: "Onboard a new Stay on Nomad Stays",
+    messages: [{
+      role: "user",
+      content: { type: "text", text: buildOnboardingPromptText(stayId) },
+    }],
+  };
 });
 
 /**
@@ -2389,7 +2450,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "getMyStayOnboardingStatus",
-        description: "Get the Stay's listing-completion scores — the same six 'Listing Completion' cards shown on the Stay dashboard (Stay Details, Availability, Rooms, Packages, Wi-Fi, Operator Information), plus an overall completion percentage. Use this when a host asks how far along they are with onboarding or what's left to finish. Note: Wi-Fi is a test-freshness score (recency of the last speed test), not a speed rating, and Operator Information is a status label ('Open'), not a real percentage — both are noted via isPlaceholder/behavior in the response. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        description: "Get the Stay's listing-completion scores — the same six 'Listing Completion' cards shown on the Stay dashboard (Stay Details, Availability, Rooms, Packages, Wi-Fi, Operator Information), plus an overall completion percentage. Use this when a host asks how far along they are with onboarding or what's left to finish. Note: Wi-Fi is a test-freshness score (recency of the last speed test), not a speed rating. Operator Information is the same score the owner's dashboard shows, with a missingItems list of labels (e.g. 'Date of Birth', 'Banking Details') — those fields are owner-only and never writable via MCP, so relay the list to the owner. Stay Details is recalculated automatically after every MCP edit to details, organisational data, contacts, facilities or photos. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: {
           type: "object",
           properties: {
@@ -2587,7 +2648,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             description: { type: "string", description: "OPTIONAL: package description" },
             roomTypeFK: { type: "number", description: "OPTIONAL: room type id this package covers. Call getRoomTypeOptions for valid values." },
             stayRoomFK: { type: "number", description: "STRONGLY RECOMMENDED: the specific room this package covers (tbStaysRoom.EntryID). Call getMyStayRooms to find the right room id first. If omitted, the server guesses a room matching roomTypeFK, which may pick the wrong one when a Stay has multiple rooms of the same type." },
-            currencyFK: { type: "number", description: "OPTIONAL: currency id. Call getCurrencyOptions for valid values." },
+            currencyFK: { type: "number", description: "REQUIRED: the currency this package is priced in — an id from getCurrencyOptions. Packages can use any supported currency; ASK the owner which one, never assume USD. All buyPrice values are in this currency." },
             maxPax: { type: "number", description: "OPTIONAL: max occupancy for this package" },
             listed: { type: "boolean", description: "OPTIONAL: whether the package is publicly listed" },
             startDate: { type: "string", format: "date", description: "OPTIONAL: first check-in date this package is available for" },
@@ -2607,7 +2668,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               }
             }
           },
-          required: ["stayId", "packageName"]
+          required: ["stayId", "packageName", "currencyFK"]
         },
         annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
@@ -2976,7 +3037,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "createStayApplication",
-        description: "Start a new Stay Application for the caller. Any fields can be supplied now or filled in later via saveStayApplication — the applicant's name defaults from their Nomad Stays profile if not supplied. Call getCountries and getBusinessModels first to resolve stayCountryId/postalCountryId/businessModelId, since country-specific rules (VAT number, tourism number, permitted business models) are enforced server-side and rejections name the specific field/reason. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        description: "Start a new Stay Application for the caller. Any fields can be supplied now or filled in later via saveStayApplication — the applicant's name defaults from their Nomad Stays profile if not supplied. Call getCountryOptions and getBusinessModelOptions first to resolve stayCountryId/postalCountryId/businessModelId, since country-specific rules (VAT number, tourism number, permitted business models) are enforced server-side and rejections name the specific field/reason. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: {
           type: "object",
           properties: {
@@ -2989,13 +3050,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             city: { type: "string" },
             state: { type: "string" },
             zip: { type: "string" },
-            postalCountryId: { type: "number", description: "tbCountry.CountryId for the applicant's billing/postal address — used only to check whether a VAT number is required, and stored on the member's business profile (not on the application itself). Use getCountries to find a value." },
-            vatNumber: { type: "string", description: "Required if the postal country's vatNumberRequired flag is true (see getCountries)" },
+            postalCountryId: { type: "number", description: "tbCountry.CountryId for the applicant's billing/postal address — used only to check whether a VAT number is required, and stored on the member's business profile (not on the application itself). Use getCountryOptions to find a value." },
+            vatNumber: { type: "string", description: "Required if the postal country's vatNumberRequired flag is true (see getCountryOptions)" },
             stayName: { type: "string" },
-            stayCountryId: { type: "number", description: "tbCountry.CountryId for where the Stay is actually located — this is the country the application itself is filed under. Use getCountries to find a value." },
-            tourismNumber: { type: "string", description: "Required if the stay country's tourismNumberRequired flag is true (see getCountries)" },
-            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModels. If the stay country's bookingModelsRestricted flag is true, only a 'StayDirect'-prefixed model is accepted." },
-            monthlyPrice: { type: "string" },
+            stayCountryId: { type: "number", description: "tbCountry.CountryId for where the Stay is actually located — this is the country the application itself is filed under. Use getCountryOptions to find a value." },
+            tourismNumber: { type: "string", description: "Required if the stay country's tourismNumberRequired flag is true (see getCountryOptions)" },
+            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModelOptions. If the stay country's bookingModelsRestricted flag is true, only a 'StayDirect'-prefixed model is accepted." },
+            monthlyPrice: { type: "string", description: "Indicative monthly wholesale price in US dollars (USD) — the application is always priced in USD. Packages are priced in the owner's chosen currency later, after approval." },
             availabilitySupplier: { type: "string" },
             hasKitchen: { type: "boolean" },
             laundryFacilities: { type: "string", enum: ["No", "On Premises", "Nearby"] },
@@ -3025,13 +3086,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             city: { type: "string" },
             state: { type: "string" },
             zip: { type: "string" },
-            postalCountryId: { type: "number", description: "tbCountry.CountryId — used only for the VAT check, stored on the business profile, not on the application. Use getCountries." },
+            postalCountryId: { type: "number", description: "tbCountry.CountryId — used only for the VAT check, stored on the business profile, not on the application. Use getCountryOptions." },
             vatNumber: { type: "string" },
             stayName: { type: "string" },
-            stayCountryId: { type: "number", description: "tbCountry.CountryId — the country the application itself is filed under. Use getCountries." },
+            stayCountryId: { type: "number", description: "tbCountry.CountryId — the country the application itself is filed under. Use getCountryOptions." },
             tourismNumber: { type: "string" },
-            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModels." },
-            monthlyPrice: { type: "string" },
+            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModelOptions." },
+            monthlyPrice: { type: "string", description: "Indicative monthly wholesale price in US dollars (USD) — the application is always priced in USD. Packages are priced in the owner's chosen currency later, after approval." },
             availabilitySupplier: { type: "string" },
             hasKitchen: { type: "boolean" },
             laundryFacilities: { type: "string", enum: ["No", "On Premises", "Nearby"] },
@@ -3083,7 +3144,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "createExperienceApplication",
-        description: "Start a new Experience Application for the caller. Any fields can be supplied now or filled in later via saveExperienceApplication — the applicant's name defaults from their Nomad Stays profile if not supplied. Call getCountries and getBusinessModels first to resolve experienceCountryId/postalCountryId/businessModelId, since country-specific rules (VAT number, tourism number, permitted business models) are enforced server-side and rejections name the specific field/reason. Experiences must run a minimum of 4 days. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        description: "Start a new Experience Application for the caller. Any fields can be supplied now or filled in later via saveExperienceApplication — the applicant's name defaults from their Nomad Stays profile if not supplied. Call getCountryOptions and getBusinessModelOptions first to resolve experienceCountryId/postalCountryId/businessModelId, since country-specific rules (VAT number, tourism number, permitted business models) are enforced server-side and rejections name the specific field/reason. Experiences must run a minimum of 4 days. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: {
           type: "object",
           properties: {
@@ -3096,12 +3157,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             city: { type: "string" },
             state: { type: "string" },
             zip: { type: "string" },
-            postalCountryId: { type: "number", description: "tbCountry.CountryId for the applicant's billing/postal address — used only to check whether a VAT number is required, and stored on the member's business profile (not on the application itself). Use getCountries to find a value." },
-            vatNumber: { type: "string", description: "Required if the postal country's vatNumberRequired flag is true (see getCountries)" },
+            postalCountryId: { type: "number", description: "tbCountry.CountryId for the applicant's billing/postal address — used only to check whether a VAT number is required, and stored on the member's business profile (not on the application itself). Use getCountryOptions to find a value." },
+            vatNumber: { type: "string", description: "Required if the postal country's vatNumberRequired flag is true (see getCountryOptions)" },
             experienceName: { type: "string" },
-            experienceCountryId: { type: "number", description: "tbCountry.CountryId for where the experience actually takes place — this is the country the application itself is filed under. Use getCountries to find a value." },
-            tourismNumber: { type: "string", description: "Required if the experience country's tourismNumberRequired flag is true (see getCountries)" },
-            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModels. If the experience country's bookingModelsRestricted flag is true, only a 'StayDirect'-prefixed model is accepted." },
+            experienceCountryId: { type: "number", description: "tbCountry.CountryId for where the experience actually takes place — this is the country the application itself is filed under. Use getCountryOptions to find a value." },
+            tourismNumber: { type: "string", description: "Required if the experience country's tourismNumberRequired flag is true (see getCountryOptions)" },
+            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModelOptions. If the experience country's bookingModelsRestricted flag is true, only a 'StayDirect'-prefixed model is accepted." },
             monthlyPrice: { type: "string", description: "Price per person (USD)" },
             hasInsurance: { type: "boolean" },
             availabilitySupplier: { type: "string" },
@@ -3136,12 +3197,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             city: { type: "string" },
             state: { type: "string" },
             zip: { type: "string" },
-            postalCountryId: { type: "number", description: "tbCountry.CountryId — used only for the VAT check, stored on the business profile, not on the application. Use getCountries." },
+            postalCountryId: { type: "number", description: "tbCountry.CountryId — used only for the VAT check, stored on the business profile, not on the application. Use getCountryOptions." },
             vatNumber: { type: "string" },
             experienceName: { type: "string" },
-            experienceCountryId: { type: "number", description: "tbCountry.CountryId — the country the application itself is filed under. Use getCountries." },
+            experienceCountryId: { type: "number", description: "tbCountry.CountryId — the country the application itself is filed under. Use getCountryOptions." },
             tourismNumber: { type: "string" },
-            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModels." },
+            businessModelId: { type: "number", description: "tbBusinessModel.EntryID — use getBusinessModelOptions." },
             monthlyPrice: { type: "string" },
             hasInsurance: { type: "boolean" },
             availabilitySupplier: { type: "string" },
@@ -3258,7 +3319,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "createCoworkingApplication",
-        description: "Start a new Coworking Application for the caller. Much simpler than the Stay/Experience applications: no VAT/tourism-number/business-model rules, no Application Fee, and no billing step at all — once coworkingName, applicantName, applicantEmail, city and country are present, nextAction goes straight to 'submit'. Call getCountries first to find a valid country name (must be the exact tbCountry.CountryName, not an ID). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        description: "Start a new Coworking Application for the caller. Much simpler than the Stay/Experience applications: no VAT/tourism-number/business-model rules, no Application Fee, and no billing step at all — once coworkingName, applicantName, applicantEmail, city and country are present, nextAction goes straight to 'submit'. Call getCountryOptions first to find a valid country name (must be the exact tbCountry.CountryName, not an ID). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: {
           type: "object",
           properties: {
@@ -3268,7 +3329,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             telephone: { type: "string" },
             address: { type: "string" },
             city: { type: "string" },
-            country: { type: "string", description: "Exact tbCountry.CountryName (not a country ID) — use getCountries and take the countryName field. Must not be a sanctioned country." },
+            country: { type: "string", description: "Exact tbCountry.CountryName (not a country ID) — use getCountryOptions and take the countryName field. Must not be a sanctioned country." },
             website: { type: "string" }
           },
           required: []
@@ -3288,7 +3349,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             telephone: { type: "string" },
             address: { type: "string" },
             city: { type: "string" },
-            country: { type: "string", description: "Exact tbCountry.CountryName (not a country ID) — use getCountries." },
+            country: { type: "string", description: "Exact tbCountry.CountryName (not a country ID) — use getCountryOptions." },
             website: { type: "string" }
           },
           required: ["applicationId"]
