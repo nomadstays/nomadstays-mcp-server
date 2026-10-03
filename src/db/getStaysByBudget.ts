@@ -181,13 +181,16 @@ export async function getStaysByBudget(connStr: string, params: {
 
     let countryFilter = '';
     if (params.countryCode) {
-      req.input('countryCode', sql.VarChar(100), params.countryCode);
-      countryFilter = `
-        AND (
-          S.CountryCode2Alpha = @countryCode
-          OR CO.CountryName LIKE '%' + @countryCode + '%'
-        )
-      `;
+      // A 2-letter code must match exactly — a substring match on CountryName
+      // would let 'ES' hit PhilippinES, United StatES, IndonESia, etc.
+      const searchTerm = String(params.countryCode).trim();
+      if (searchTerm.length === 2) {
+        req.input('countryCode', sql.VarChar(10), searchTerm.toUpperCase());
+        countryFilter = 'AND S.CountryCode2Alpha = @countryCode';
+      } else {
+        req.input('countrySearchPattern', sql.VarChar(100), `%${searchTerm}%`);
+        countryFilter = 'AND (CO.CountryName LIKE @countrySearchPattern OR CO.FullCountryName LIKE @countrySearchPattern)';
+      }
     }
 
     let continentFilter = '';
