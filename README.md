@@ -6,7 +6,7 @@ Compatible with **Claude**, **ChatGPT**, and any MCP-aware AI agent.
 
 ## Tools available
 
-Full, current tool list: 80 tools total. See [mcp.nomadstays.com](https://mcp.nomadstays.com) for the complete reference with parameters — this README lists them grouped by category; keep both in sync when tools are added or changed.
+Full, current tool list: 78 tools total. See [mcp.nomadstays.com](https://mcp.nomadstays.com) for the complete reference with parameters — this README lists them grouped by category; keep both in sync when tools are added or changed.
 
 ### Search, availability, and reference (public, no auth)
 

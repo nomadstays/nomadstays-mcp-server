@@ -183,7 +183,7 @@ function createServer(): Server {
   const server = new Server(
   {
     name: "nomadstays-mcp-server",
-    version: "0.9.1",
+    version: "0.9.2",
   },
   {
     capabilities: {
@@ -358,62 +358,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     } catch (err: any) {
       // Surface the DB error to the client for easier debugging
-      throw new Error(`DB query failed: ${err?.message ?? String(err)}`);
-    }
-  }
-
-  if (request.params.name === "getMarketplaceAdverts") {
-    const category = request.params.arguments?.category ?? null;
-    const limit = Number(request.params.arguments?.limit) || 20;
-
-    const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-    let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-    connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-    if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
-    }
-
-    try {
-      const { getMarketplaceAdverts } = await import('./db/getMarketplaceAdverts.js');
-      const adverts = await getMarketplaceAdverts(connStr, { category: category ? String(category) : null, limit });
-
-      return {
-        content: [{
-          type: "text" as const,
-          text: JSON.stringify(adverts)
-        }],
-        structuredContent: buildListCardsStructuredContent(adverts, {
-          titleField: "Title",
-          actionUrlField: "URL",
-          actionLabel: "Visit"
-        }),
-        _meta: listCardsToolInvocationMeta
-      };
-    } catch (err: any) {
-      throw new Error(`DB query failed: ${err?.message ?? String(err)}`);
-    }
-  }
-
-  if (request.params.name === "getMarketplaceCategories") {
-    const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-    let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
-    connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
-    if (!connStr) {
-      throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
-    }
-
-    try {
-      const { getMarketplaceCategories } = await import('./db/getMarketplaceCategories.js');
-      const categories = await getMarketplaceCategories(connStr);
-
-      return {
-        content: [{
-          type: "text" as const,
-          text: JSON.stringify(categories)
-        }],
-        structuredContent: { categories }
-      };
-    } catch (err: any) {
       throw new Error(`DB query failed: ${err?.message ?? String(err)}`);
     }
   }
@@ -2085,36 +2029,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         annotations: { title: "Search Stays by Location", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
-        name: "getMarketplaceAdverts",
-        description: "Returns Nomad Marketplace adverts — third-party partner deals and services (e.g. eSIMs, travel services) listed at nomadstays.com/nomad-marketplace. This is separate from Stays (accommodation listings); use the getStaysBy* tools for accommodation instead. Optionally filter by category (use getMarketplaceCategories to see available categories).",
-        inputSchema: {
-          type: "object",
-          properties: {
-            category: {
-              type: "string",
-              description: "Optional category name or partial match to filter adverts (e.g. 'eSIM', 'Travel Insurance'). Use getMarketplaceCategories to see available categories."
-            },
-            limit: {
-              type: "number",
-              description: "Maximum number of results to return (default: 20)"
-            }
-          },
-          required: []
-        },
-        _meta: listCardsWidgetMeta,
-        annotations: { title: "Browse Nomad Marketplace Deals", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
-      },
-      {
-        name: "getMarketplaceCategories",
-        description: "Returns the list of Nomad Marketplace advertising categories (e.g. 'eSIM', 'Travel Insurance'). Use this to discover valid category values for getMarketplaceAdverts.",
-        inputSchema: {
-          type: "object",
-          properties: {},
-          required: []
-        },
-        annotations: { title: "List Nomad Marketplace Categories", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
-      },
-      {
         name: "searchHelpCenter",
         description: "Search NomadStays Help Center articles from the public knowledgebase endpoint and return matching title/content/slug entries.",
         inputSchema: {
@@ -3522,7 +3436,7 @@ async function main() {
                 status: 'ok', 
                 service: 'nomadstays-mcp-server',
                 timestamp: new Date().toISOString(),
-                version: '0.9.1',
+                version: '0.9.2',
                 transport: 'streamable-http',
                 endpoints: {
                     mcp: '/mcp',
