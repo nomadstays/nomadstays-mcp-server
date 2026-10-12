@@ -182,7 +182,7 @@ const CompatibilityHelper = {
 function createServer(): Server {
   const server = new Server(
   {
-    name: "nomadstays-mcp-dev",
+    name: "nomadstays-mcp-server",
     version: "0.9.0",
   },
   {
@@ -597,9 +597,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   if (request.params.name === "getStayCountsByCountry") {
     const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
-    let connStr = String(connStrRaw).trim().replace(/^=+s*/, '');
+    let connStr = String(connStrRaw).trim().replace(/^=+\s*/, '');
     // strip surrounding quotes and fix port syntax if user pasted incorrectly
-    connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(d+);/, ',$1;');
+    connStr = connStr.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').replace(/;(\d+);/, ',$1;');
     if (!connStr) {
       throw new Error("Environment variable NOMADSTAYS_DB_CONNECTION must be set to query the database");
     }
@@ -639,10 +639,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     try {
       const { checkStayAvailability } = await import('./db/checkStayAvailability.js');
-      const result = await checkStayAvailability(connStr, {
-        stayId: String(stayId),
-        checkIn: String(checkIn),
-        checkOut: String(checkOut),
+      const result = await checkStayAvailability(connStr, { 
+        stayId: String(stayId), 
+        checkIn: String(checkIn), 
+        checkOut: String(checkOut), 
         roomType: roomType ? String(roomType) : undefined
       });
 
@@ -832,7 +832,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     try {
       const { getStaysByBudget } = await import('./db/getStaysByBudget.js');
-      const stays = await getStaysByBudget(connStr, { 
+      const stays = await getStaysByBudget(connStr, {
         countryCode: countryCode ? String(countryCode) : null,
         continent: continent ? String(continent) : null,
         durationDays,
@@ -1165,6 +1165,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       throw new Error(`reorderRoomPhotos failed: ${err?.message ?? String(err)}`);
     }
   }
+
 
   if (request.params.name === "createStayPackage") {
     const stayId = request.params.arguments?.stayId ?? null;
@@ -2167,7 +2168,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "string",
               description: "Lifestyle/genre category name or partial match (e.g., 'Digital Nomad', 'Beach', 'City'). Use getAllLifestyles tool to see all available categories."
             },
-            limit: { 
+            limit: {
               type: "number",
               description: "Maximum number of results to return (default: 15)"
             }
@@ -3273,7 +3274,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
         annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
-
       {
         name: "quoteStayBooking",
         description: "Get a server-computed price and availability quote for booking a Stay package on the caller's own behalf. Price is always re-derived from the package's actual pricing tiers — never trust or reuse a price shown elsewhere. Picks the largest price tier whose length is <= the requested nights (e.g. 10 nights against 7/14/21/30-day tiers uses the 7-day tier's rate), falling back to the smallest tier if the stay is shorter than all of them. Returns a quoteId valid for about 15 minutes — call bookStay with it to actually create the booking and get a payment link. Requires the caller's token to carry the 'bookings' OAuth scope (McpMember role), separate from the listings-management 'McpAgent' scope other tools here use.",
@@ -3422,6 +3422,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 const server = createServer();
 
 
+
 /**
  * Start the server using stdio transport for local development
  * or HTTP transport for remote access (Coolify container).
@@ -3519,7 +3520,7 @@ async function main() {
         app.get('/health', (req, res) => {
             res.json({ 
                 status: 'ok', 
-                service: 'nomadstays-mcp-dev',
+                service: 'nomadstays-mcp-server',
                 timestamp: new Date().toISOString(),
                 version: '0.9.0',
                 transport: 'streamable-http',

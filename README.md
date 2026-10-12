@@ -1,4 +1,4 @@
-# NomadStays MCP Server (dev)
+# NomadStays MCP Server
 
 An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that gives AI agents access to Nomad Stays accommodation data — search by country, continent, location, lifestyle, budget, amenities, and availability.
 
@@ -6,7 +6,7 @@ Compatible with **Claude**, **ChatGPT**, and any MCP-aware AI agent.
 
 ## Tools available
 
-Full, current tool list: 72 tools total. See [mcp.nomadstays.com](https://mcp.nomadstays.com) for the complete reference with parameters — this README lists them grouped by category; keep both in sync when tools are added or changed.
+Full, current tool list: 77 tools total. See [mcp.nomadstays.com](https://mcp.nomadstays.com) for the complete reference with parameters — this README lists them grouped by category; keep both in sync when tools are added or changed.
 
 ### Search, availability, and reference (public, no auth)
 
@@ -59,6 +59,15 @@ Stay, Experience, and Coworking applications each go through the same `list` / `
 | `listExperienceApplications` / `getExperienceApplication` / `createExperienceApplication` / `saveExperienceApplication` / `submitExperienceApplication` | Full Experience Application lifecycle (min. 4-day experiences, enforced server-side) |
 | `listCoworkingApplications` / `getCoworkingApplication` / `createCoworkingApplication` / `saveCoworkingApplication` / `submitCoworkingApplication` | Full Coworking Application lifecycle — no Application Fee |
 
+### Booking (require an MCP agent token)
+
+| Tool | Description |
+|---|---|
+| `quoteStayBooking` | Price a prospective booking (package, dates, guests) before committing |
+| `bookStay` | Create a booking on the caller's own behalf; returns a `checkoutUrl` or resolves as confirmed |
+| `getBookingStatus` | Check whether a booking is confirmed, verified fresh against the payment provider |
+| `listMyBookings` | List the caller's own bookings, including `needsAction`/`checkoutUrl` for anything still pending |
+
 ## Trusted Stay Partner management tools
 
 The tools above are read-only and public (aside from applications, which are self-service but still token-gated). A separate set of tools lets an **authorized Trusted Stay Partner's own AI agent** read AND write their own listing data — with the same capabilities (no more, no less) as they have via the Nomad Stays admin UI. These require a bearer token issued from the partner's Operator Information page at `www.nomadstays.com/stayadmin/user-profile-stays` (2FA must be enabled on the account to request one), set as `NOMADSTAYS_MCP_AGENT_TOKEN`. Every call is scoped server-side to Stays the authenticated account actually owns.
@@ -91,8 +100,8 @@ Key rules: boutique Stays (`Boutique1`–`Boutique6` room types) and standard St
 ### 2. Install
 
 ```bash
-git clone https://github.com/nomadstays/nomadstays-mcp-dev.git
-cd nomadstays-mcp-dev
+git clone https://github.com/nomadstays/nomadstays-mcp-server.git
+cd nomadstays-mcp-server
 npm install
 ```
 
@@ -134,9 +143,9 @@ Copy `claude_desktop_config.example.json`, update the path and connection string
 ```json
 {
   "mcpServers": {
-    "nomadstays-mcp25-dev": {
+    "nomadstays": {
       "command": "node",
-      "args": ["/path/to/nomadstays-mcp-dev/build/index.js"],
+      "args": ["/path/to/nomadstays-mcp-server/build/index.js"],
       "env": {
         "NOMADSTAYS_DB_CONNECTION": "Server=tcp:..."
       }
