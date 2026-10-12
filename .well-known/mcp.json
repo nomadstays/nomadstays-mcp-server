@@ -1,9 +1,9 @@
 {
   "mcp": {
     "name": "Nomad Stays",
-    "url": "https://mcp.nomadstays.com/",
+    "url": "https://dev-mcp.nomadstays.com/",
     "description": "Digital nomad accommodation worldwide",
-    "endpoint": "https://mcp.nomadstays.com/mcp",
+    "endpoint": "https://dev-mcp.nomadstays.com/mcp",
     "transport": "streamable-http",
     "capabilities": [
       "getStayByID",
@@ -14,6 +14,7 @@
       "getStaysByBudget",
       "getStaysByAmenities",
       "getStaysByWiFiSpeed",
+      "getStayCountsByCountry",
       "getAllLifestyles",
       "getAllAmenities",
       "checkStayAvailability",

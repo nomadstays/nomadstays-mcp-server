@@ -170,8 +170,9 @@ export async function getStaysByBudget(connStr: string, params: {
     const req = pool.request();
 
     const limit = params.limit || 15;
-    // Fetch more candidates than limit to account for many not being available
-    const candidateLimit = Math.max(100, limit * 5);
+    // Consider every listed stay, not just the first few alphabetically: results are
+    // sorted cheapest-first below and only then cut to `limit`.
+    const candidateLimit = 2000;
     req.input('limit', sql.Int, candidateLimit);
     req.input('durationDays', sql.Int, params.durationDays);
     req.input('maxPrice', sql.Decimal(10, 2), params.maxPrice);
@@ -362,9 +363,6 @@ export async function getStaysByBudget(connStr: string, params: {
             logDebug(`Stay 260 INCLUDED: no price data (price=${r.MinPrice}, days=${days})`);
           }
         }
-        
-        // Stop if we've found enough available stays
-        if (availableStays.length >= limit) break;
       } catch (err: any) {
         if (Number(r.EntryId) === 260) {
           logDebug(`Stay 260 error: ${err?.message}`);
@@ -373,7 +371,12 @@ export async function getStaysByBudget(connStr: string, params: {
       }
     }
 
-    return availableStays as any[];
+    // Cheapest first (stays with no price for this duration go last), then cut to the limit.
+    // priceRange is "<total> <currency>" in the requested currency, or null.
+    const totalOf = (st: any) => (st.priceRange ? parseFloat(st.priceRange) : Number.POSITIVE_INFINITY);
+    availableStays.sort((a: any, b: any) => totalOf(a) - totalOf(b));
+
+    return availableStays.slice(0, limit) as any[];
   } finally {
     try { await pool.close(); } catch { /* ignore */ }
   }

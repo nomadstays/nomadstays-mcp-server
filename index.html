@@ -262,6 +262,7 @@
             </div>
         </div>
 
+
         <div class="section" id="who-is-this-for">
             <h2>👥 What You Can Do</h2>
             <p>This MCP server serves two kinds of users. Pick the column that matches you:</p>
@@ -504,6 +505,11 @@
                         </tr>
                         <tr>
                             <td colspan="3" style="background: #f0f0f0; font-weight: bold; padding: 0.75rem;">📚 Reference & Metadata Tools</td>
+                        </tr>
+                        <tr>
+                            <td><code>getStayCountsByCountry</code></td>
+                            <td>Number of stays per country, most first</td>
+                            <td><code>continent</code> (optional)</td>
                         </tr>
                         <tr>
                             <td><code>getAllLifestyles</code></td>
@@ -1062,8 +1068,9 @@ sig = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
                 <tr><td style="padding:0.5rem;border:1px solid #dee2e6;"><code>404</code></td><td style="padding:0.5rem;border:1px solid #dee2e6;">Stay or room not found</td></tr>
             </table>
 
-            <p style="margin-top:1.5rem;">For the full integration specification including code examples in Python and Node.js,
-                please <a href="https://www.nomadstays.com/contact-us">contact us</a> to begin onboarding.</p>
+            <p style="margin-top:1.5rem;">For the full integration specification including code examples in Python and Node.js, see the
+                <a href="https://github.com/nomadstays/nomadstays-mcp-dev/blob/dev/SUPPLIER_SPEC.md" target="_blank">SUPPLIER_SPEC.md</a>
+                on GitHub or <a href="https://www.nomadstays.com/contact-us">contact us</a> to begin onboarding.</p>
         </div>
 
         <div class="section">
@@ -1082,7 +1089,7 @@ sig = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
             <ul style="margin-left: 2rem; margin-top: 0.5rem;">
                 <li>Contact: <a href="https://www.nomadstays.com/contact-us" target="_blank">Contact Page</a></li>
                 <!-- <li>Documentation: https://docs.nomadstays.com</li>
-                <li>GitHub: https://github.com/nomadstays/nomadstays-mcp-server</li> -->
+                <li>GitHub: https://github.com/nomadstays/nomadstays-mcp-dev</li> -->
             </ul>
         </div>
     </div>

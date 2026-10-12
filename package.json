@@ -1,12 +1,12 @@
 {
-  "name": "nomadstays-mcp-server",
-  "version": "0.8.1",
+  "name": "nomadstays-mcp25-dev",
+  "version": "0.9.0",
   "description": "A Model Context Protocol server",
   "license": "BSD-3-Clause",
   "private": true,
   "type": "module",
   "bin": {
-    "nomadstays-mcp-server": "./build/index.js"
+    "nomadstays-mcp25-dev": "./build/index.js"
   },
   "files": [
     "build"
