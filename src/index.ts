@@ -183,7 +183,7 @@ function createServer(): Server {
   const server = new Server(
   {
     name: "nomadstays-mcp-server",
-    version: "0.9.0",
+    version: "0.9.1",
   },
   {
     capabilities: {
@@ -2004,7 +2004,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["id"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get Stay Details", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2022,7 +2022,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["firstName", "lastName", "email", "telephone", "password", "acceptGdpr"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Sign Up for a Nomad Stays Account", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByCountry",
@@ -2042,7 +2042,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["countrycode"]
         },
         _meta: stayResultsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Search Stays by Country", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByContinent",
@@ -2062,7 +2062,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["continent"]
         },
         _meta: stayResultsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Search Stays by Continent", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByLocation",
@@ -2082,7 +2082,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["location"]
         },
         _meta: stayResultsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Search Stays by Location", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMarketplaceAdverts",
@@ -2102,7 +2102,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: []
         },
         _meta: listCardsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Browse Nomad Marketplace Deals", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMarketplaceCategories",
@@ -2112,7 +2112,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Nomad Marketplace Categories", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "searchHelpCenter",
@@ -2131,7 +2131,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: []
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Search Help Center", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getHelpCenterArticle",
@@ -2146,7 +2146,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["id"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get Help Center Article", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "listHelpCenterCategories",
@@ -2156,7 +2156,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Help Center Categories", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByLifestyle",
@@ -2176,7 +2176,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["lifestyle"]
         },
         _meta: stayResultsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Search Stays by Lifestyle", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2217,7 +2217,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["durationDays", "maxPrice", "currency"]
         },
         _meta: stayResultsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Search Stays by Budget", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2248,7 +2248,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["amenities"]
         },
         _meta: stayResultsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Search Stays by Amenities", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByWiFiSpeed",
@@ -2268,7 +2268,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: []
         },
         _meta: stayResultsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Find Stays with Fast Wi-Fi", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2279,7 +2279,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Lifestyle Categories", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2295,7 +2295,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: []
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Count Stays by Country", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2306,7 +2306,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List All Amenities", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2335,7 +2335,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["stayId", "checkIn", "checkOut"]
         },
         _meta: availabilityWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Check Stay Availability", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2363,7 +2363,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "fromDate", "minLengthOfStay"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Check Availability in a Date Window", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2395,7 +2395,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "preferredCheckIn", "minLengthOfStay"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Find Nearest Available Dates", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2423,7 +2423,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "year", "month", "minLengthOfStay"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get Availability by Month", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2447,7 +2447,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["roomId", "checkIn", "checkOut"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Check Room Availability by Night", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2463,7 +2463,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["roomId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get Room Amenities and Wi-Fi Speeds", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2475,7 +2475,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: []
         },
         _meta: listCardsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List My Stays", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayDetail",
@@ -2487,7 +2487,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get My Stay Title and Description", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayOnboardingStatus",
@@ -2499,7 +2499,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get Listing Completion Status", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayRooms",
@@ -2511,7 +2511,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List My Stay's Rooms", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayPackages",
@@ -2523,7 +2523,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List My Stay's Pricing Packages", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayOrganisationalData",
@@ -2535,7 +2535,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get My Stay's Organisational Data", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyBusinessProfile",
@@ -2545,7 +2545,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
           required: []
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get My Business Profile", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2560,7 +2560,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update Stay Title and Description", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createStayRoom",
@@ -2585,7 +2585,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "roomTitle"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Add a Room to a Stay", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayRoom",
@@ -2611,7 +2611,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "roomId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update a Room", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "deleteStayRoom",
@@ -2624,7 +2624,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "roomId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }
+        annotations: { title: "Delete a Room", readOnlyHint: false, destructiveHint: true, openWorldHint: false }
       },
       {
         name: "getRoomTypeOptions",
@@ -2636,13 +2636,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Room Type Options", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getRoomFacilityOptions",
         description: "List every room-level amenity/facility option available (roomFacilityFk in createStayRoom/updateStayRoom) — e.g. Wi-Fi, Air Conditioning, Private Bathroom. Wi-Fi is mandatory and always included even if not explicitly selected. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: { type: "object", properties: {}, required: [] },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Room Facility Options", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "deleteRoomPhoto",
@@ -2657,7 +2657,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "roomId", "roomArea", "fileName"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }
+        annotations: { title: "Delete a Room Photo", readOnlyHint: false, destructiveHint: true, openWorldHint: false }
       },
       {
         name: "reorderRoomPhotos",
@@ -2676,7 +2676,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "roomId", "roomArea", "fileNames"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Reorder Room Photos", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createStayPackage",
@@ -2711,7 +2711,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "packageName", "currencyFK"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Create a Pricing Package", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayPackage",
@@ -2748,7 +2748,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "packageId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update a Pricing Package", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "deleteStayPackage",
@@ -2761,7 +2761,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "packageId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }
+        annotations: { title: "Delete a Pricing Package", readOnlyHint: false, destructiveHint: true, openWorldHint: false }
       },
       {
         name: "getCurrencyOptions",
@@ -2770,7 +2770,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {}
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Currency Options", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayOrganisationalData",
@@ -2811,7 +2811,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update Stay Organisational Data", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateHostBusinessProfile",
@@ -2826,7 +2826,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: []
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update My Business Profile", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2853,7 +2853,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "area"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Upload a Stay Photo", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -2866,7 +2866,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get My Stay's Contacts and Social Links", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayContacts",
@@ -2895,7 +2895,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update Stay Contacts and Social Links", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayFacilities",
@@ -2908,7 +2908,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "group"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get My Stay's Facilities", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "updateStayFacilities",
@@ -2926,31 +2926,31 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "group", "facilityDetailIds"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update Stay Facilities", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getFacilityGroups",
         description: "List every facility/checkbox group name that exists on the platform (e.g. 'Languages Spoken', 'General', 'Services', 'Meal', 'Position', 'Remote Worker'). Call this first if you don't already know the exact group name to pass to getMyStayFacilities/updateStayFacilities. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: { type: "object", properties: {}, required: [] },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Facility Groups", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStayTypeOptions",
         description: "List valid values for a Stay's 'Main Accommodation Type' (stayTypeId in updateStayOrganisationalData). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: { type: "object", properties: {}, required: [] },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Accommodation Type Options", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getCountryOptions",
         description: "List valid values for a Stay's country (countryId in updateStayOrganisationalData), with each country's name and 2-letter code. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: { type: "object", properties: {}, required: [] },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Country Options", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getCancellationPolicyOptions",
         description: "List valid values for a Stay's cancellation policy (cxPolicyId in updateStayOrganisationalData). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: { type: "object", properties: {}, required: [] },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Cancellation Policy Options", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getAdditionalInformationOptions",
@@ -2962,13 +2962,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["filterName"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Children, Pets and Parking Options", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getBusinessModelOptions",
         description: "List valid values for a Stay's listing/business model (businessModelId, read-only — displayed on the Stay but not editable via MCP or the host UI itself). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: { type: "object", properties: {}, required: [] },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List Business Model Options", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getMyStayPhotos",
@@ -2980,7 +2980,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List My Stay's Photos", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "deleteStayPhoto",
@@ -2994,7 +2994,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "area", "fileName"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }
+        annotations: { title: "Delete a Stay Photo", readOnlyHint: false, destructiveHint: true, openWorldHint: false }
       },
       {
         name: "reorderStayPhotos",
@@ -3012,7 +3012,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["stayId", "area", "fileNames"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Reorder Stay Photos", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -3025,7 +3025,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["productId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get Product Price", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "purchaseProduct",
@@ -3038,7 +3038,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["productId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Start a Product Purchase", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getPurchaseStatus",
@@ -3050,7 +3050,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["saleId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Check Purchase Status", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -3062,7 +3062,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: []
         },
         _meta: listCardsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List My Stay Applications", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStayApplication",
@@ -3074,7 +3074,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get a Stay Application", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createStayApplication",
@@ -3109,7 +3109,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: []
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Start a Stay Application", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "saveStayApplication",
@@ -3145,7 +3145,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update a Stay Application", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "submitStayApplication",
@@ -3157,7 +3157,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Submit a Stay Application", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -3169,7 +3169,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: []
         },
         _meta: listCardsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List My Experience Applications", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getExperienceApplication",
@@ -3181,7 +3181,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get an Experience Application", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createExperienceApplication",
@@ -3220,7 +3220,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: []
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Start an Experience Application", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "saveExperienceApplication",
@@ -3260,7 +3260,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update an Experience Application", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "submitExperienceApplication",
@@ -3272,7 +3272,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Submit an Experience Application", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "quoteStayBooking",
@@ -3291,7 +3291,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["packageId", "checkIn", "checkOut"]
         },
         _meta: bookingWidgetMeta,
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get a Booking Quote", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "bookStay",
@@ -3308,7 +3308,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["quoteId"]
         },
         _meta: bookingWidgetMeta,
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Book a Stay", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getBookingStatus",
@@ -3321,7 +3321,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["pnr"]
         },
         _meta: bookingWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Check Booking Status", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "listMyBookings",
@@ -3332,7 +3332,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: []
         },
         _meta: listCardsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List My Bookings", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
 
       {
@@ -3344,7 +3344,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: []
         },
         _meta: listCardsWidgetMeta,
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "List My Coworking Applications", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getCoworkingApplication",
@@ -3356,7 +3356,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         },
-        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Get a Coworking Application", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "createCoworkingApplication",
@@ -3375,7 +3375,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: []
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Start a Coworking Application", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "saveCoworkingApplication",
@@ -3395,7 +3395,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Update a Coworking Application", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "submitCoworkingApplication",
@@ -3407,7 +3407,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["applicationId"]
         },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+        annotations: { title: "Submit a Coworking Application", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       }
     ]
   };
@@ -3522,7 +3522,7 @@ async function main() {
                 status: 'ok', 
                 service: 'nomadstays-mcp-server',
                 timestamp: new Date().toISOString(),
-                version: '0.9.0',
+                version: '0.9.1',
                 transport: 'streamable-http',
                 endpoints: {
                     mcp: '/mcp',
