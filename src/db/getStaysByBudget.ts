@@ -373,7 +373,11 @@ export async function getStaysByBudget(connStr: string, params: {
 
     // Cheapest first (stays with no price for this duration go last), then cut to the limit.
     // priceRange is "<total> <currency>" in the requested currency, or null.
-    const totalOf = (st: any) => (st.priceRange ? parseFloat(st.priceRange) : Number.POSITIVE_INFINITY);
+    // A zero total means a placeholder price row, not a free stay — rank it with the unpriced ones.
+    const totalOf = (st: any) => {
+      const total = st.priceRange ? parseFloat(st.priceRange) : 0;
+      return total > 0 ? total : Number.POSITIVE_INFINITY;
+    };
     availableStays.sort((a: any, b: any) => totalOf(a) - totalOf(b));
 
     return availableStays.slice(0, limit) as any[];
