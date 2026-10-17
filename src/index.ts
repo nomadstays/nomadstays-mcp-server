@@ -183,7 +183,7 @@ function createServer(): Server {
   const server = new Server(
   {
     name: "nomadstays-mcp-server",
-    version: "0.9.2",
+    version: "0.9.3",
   },
   {
     capabilities: {
@@ -1962,7 +1962,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             email: { type: "string", description: "A real email address the person controls — the confirmation link is sent here and the account stays inactive until it's clicked" },
             telephone: { type: "string", description: "Contact telephone number" },
             password: { type: "string", description: "Account password, minimum 6 characters" },
-            acceptGdpr: { type: "boolean", description: "Must be true — the person has agreed to NomadStays' GDPR terms" }
+            acceptGdpr: { type: "boolean", description: "Must be true, and only after showing the person this statement and getting their explicit agreement (the same wording as the website's sign-up form): \"I accept the Terms & Conditions (https://www.nomadstays.com/terms-and-conditions) and Privacy Policy (https://www.nomadstays.com/privacy), that the information collected is processed by Nomad Stays in order to receive the service, and I consent to analytics and advertising cookies as described in the Cookie Policy (https://www.nomadstays.com/cookies) and to receiving updates & newsletters.\" Never assume agreement on the person's behalf." }
           },
           required: ["firstName", "lastName", "email", "telephone", "password", "acceptGdpr"]
         },
