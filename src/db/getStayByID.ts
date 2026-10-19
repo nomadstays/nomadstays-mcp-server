@@ -246,7 +246,10 @@ export async function getStayByID(connStr: string, id: string | number): Promise
         WHERE p.StayFK = @id AND sp.Listed = 1
         ORDER BY sp.Days ASC`;
       const offersRes = await req.query(offersQ);
-      rec.Offers = (offersRes.recordset || []).map((o: any)=>({ 
+      // Prices stay visible on enquiry-only Stays, but they can't be bought online, so the
+      // offers (and jsonLd, built from them) mustn't claim InStock; bookingStatus explains why.
+      const offerAvailability = rec.bookable ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
+      rec.Offers = (offersRes.recordset || []).map((o: any)=>({
         '@type': 'Offer', 
         offername: o.OfferName ?? null,
         description: o.PackageDescription ?? null, 
@@ -255,7 +258,7 @@ export async function getStayByID(connStr: string, id: string | number): Promise
         priceCurrency: String(o.CurrencyCode ?? 'USD'), 
         validFrom: o.RecordingDate ? new Date(o.RecordingDate).toISOString().substring(0,10) : undefined, 
         validThrough: o.EndDate ? new Date(o.EndDate).toISOString().substring(0,10) : undefined, 
-        availability: 'https://schema.org/InStock' 
+        availability: offerAvailability
       }));
     } catch { rec.Offers = null; }
 
