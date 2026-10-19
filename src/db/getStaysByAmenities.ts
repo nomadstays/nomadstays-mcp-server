@@ -1,4 +1,5 @@
 import sql from 'mssql';
+import { OPEN_ACCOUNT_STAY_FILTER, BOOKABLE_COLUMN, BOOKABLE_FIRST_ORDER, applyBookingStatus } from './stayVisibility.js';
 import type { Stay } from "../types/stay.js";
 
 function parseConnectionString(connStr: string) {
@@ -156,7 +157,7 @@ export async function getStaysByAmenities(connStr: string, params: {
       )
       SELECT
         S.EntryId,
-        S.Title, S.AltTitle, S.ListingStatus,
+        S.Title, S.AltTitle, S.ListingStatus, ${BOOKABLE_COLUMN},
         S.City,
         S.State,
         S.PostCode,
@@ -189,14 +190,13 @@ export async function getStaysByAmenities(connStr: string, params: {
         ) AS AmenitiesFound
       FROM tbStays S
       LEFT JOIN tbCountry CO ON S.Country = CO.CountryId
-      WHERE S.IsDeleted != 'true'
+      WHERE ${OPEN_ACCOUNT_STAY_FILTER}
         AND S.TotalRooms >= 1
-        AND S.Listed = 1
         AND CAST(ISNULL(S.WiFi_Download_Speed, 0) AS FLOAT) >= @minWifiSpeed
         AND (
           ${matchType === 'all' ? amenityAllClause : `EXISTS (SELECT 1 FROM StayAmenities sa WHERE sa.StayId = S.EntryId AND (${amenityOrClause}))`}
         )
-      ORDER BY S.Title
+      ORDER BY ${BOOKABLE_FIRST_ORDER}, S.Title
     `;
 
     // Add amenity parameters
@@ -215,13 +215,9 @@ export async function getStaysByAmenities(connStr: string, params: {
 
     // Format results
     const staysWithAmenities = result.recordset.map((r: any) => {
-      // Limited Listing rooms/stays are hidden from search and non-bookable —
-      // never expose the real business name via MCP for one, the same masking
-      // applied on the public site (searchresults/staydetail use AltTitle too).
-      const title = (r.ListingStatus === 'LimitedListing' && r.AltTitle) ? r.AltTitle : r.Title;
       const orderedStay = {
         EntryId: r.EntryId,
-        Title: title,
+        Title: r.Title,
         City: r.City,
         State: r.State,
         PostCode: r.PostCode,
@@ -237,9 +233,10 @@ export async function getStaysByAmenities(connStr: string, params: {
         CountryName: r.CountryName,
         CountryContinent: r.CountryContinent,
         WiFiDownloadSpeed: r.WiFiDownloadSpeed ? Number(r.WiFiDownloadSpeed) : null,
-        AmenitiesFound: r.AmenitiesFound ? r.AmenitiesFound.split(', ') : []
+        AmenitiesFound: r.AmenitiesFound ? r.AmenitiesFound.split(', ') : [],
+        Bookable: r.Bookable
       };
-      return orderedStay;
+      return applyBookingStatus(orderedStay);
     });
 
     // Apply limit

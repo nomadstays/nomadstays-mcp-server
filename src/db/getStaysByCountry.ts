@@ -1,4 +1,5 @@
 import sql from 'mssql';
+import { OPEN_ACCOUNT_STAY_FILTER, BOOKABLE_COLUMN, BOOKABLE_FIRST_ORDER, applyBookingStatus } from './stayVisibility.js';
 import type { Stay } from '../types/stay.js';
 
 function parseConnectionString(connStr: string) {
@@ -126,7 +127,7 @@ export async function getStaysByCountry(connStr: string, opts?: { country?: stri
     }
     const query = `
       SELECT TOP (@limit)
-        S.EntryId, S.Title, S.AltTitle, S.ListingStatus,
+        S.EntryId, S.Title, S.AltTitle, S.ListingStatus, ${BOOKABLE_COLUMN},
         S.City, S.CountryCode2Alpha, S.URL, CO.CountryName,
         ISNULL(L.location_name,'MISSING') AS Region,
         S.GeoLat, S.GeoLng,
@@ -150,9 +151,9 @@ export async function getStaysByCountry(connStr: string, opts?: { country?: stri
         WHERE sp.Listed = 1 AND sp.Days = 7
         GROUP BY p.StayFK
       ) P ON P.StayFK = S.EntryId
-      WHERE S.IsDeleted != 'true' ${whereCountry}
+      WHERE ${OPEN_ACCOUNT_STAY_FILTER} ${whereCountry}
       ORDER BY 
-        CASE WHEN S.WiFi_Download_Speed IS NULL OR S.WiFi_Download_Speed = '' THEN 1 ELSE 0 END,
+        ${BOOKABLE_FIRST_ORDER}, CASE WHEN S.WiFi_Download_Speed IS NULL OR S.WiFi_Download_Speed = '' THEN 1 ELSE 0 END,
         S.WiFi_Download_Speed DESC,
         CASE WHEN P.MinSellPrice IS NULL THEN 1 ELSE 0 END,
         P.MinSellPrice DESC
@@ -165,14 +166,7 @@ export async function getStaysByCountry(connStr: string, opts?: { country?: stri
       // Skip undefined/null rows
       if (!r) continue;
 
-      // Limited Listing rooms/stays are hidden from search and non-bookable —
-      // never expose the real business name via MCP for one, the same masking
-      // applied on the public site (searchresults/staydetail use AltTitle too).
-      if (r.ListingStatus === 'LimitedListing' && r.AltTitle) {
-        r.Title = r.AltTitle;
-      }
-      delete r.AltTitle;
-      delete r.ListingStatus;
+      applyBookingStatus(r);
 
       if (r.URL) {
         const u = String(r.URL).trim();

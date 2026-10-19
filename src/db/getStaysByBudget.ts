@@ -1,4 +1,5 @@
 import sql from 'mssql';
+import { OPEN_ACCOUNT_STAY_FILTER, BOOKABLE_COLUMN, BOOKABLE_FIRST_ORDER, applyBookingStatus } from './stayVisibility.js';
 import type { Stay } from "../types/stay.js";
 import { appendFileSync } from 'fs';
 import { join } from 'path';
@@ -203,7 +204,7 @@ export async function getStaysByBudget(connStr: string, params: {
     const query = `
       SELECT TOP (@limit)
         S.EntryId,
-        S.Title, S.AltTitle, S.ListingStatus,
+        S.Title, S.AltTitle, S.ListingStatus, ${BOOKABLE_COLUMN},
         S.City,
         S.State,
         S.PostCode,
@@ -231,12 +232,11 @@ export async function getStaysByBudget(connStr: string, params: {
         LEFT JOIN tbCurrencies C ON p.CurrencyFK = C.EntryID
         WHERE sp.Listed = 1
       ) P ON P.StayFK = S.EntryId AND P.RowNum = 1
-      WHERE S.IsDeleted != 'true'
+      WHERE ${OPEN_ACCOUNT_STAY_FILTER}
       AND S.TotalRooms >= 1
-      AND S.Listed = 1
       ${countryFilter}
       ${continentFilter}
-      ORDER BY S.Title
+      ORDER BY ${BOOKABLE_FIRST_ORDER}, S.Title
     `;
 
     const result = await req.query(query);
@@ -258,16 +258,8 @@ export async function getStaysByBudget(connStr: string, params: {
     
     for (const r of result.recordset as any[]) {
       try {
-        // Limited Listing rooms/stays are hidden from search and non-bookable —
-        // never expose the real business name via MCP for one, the same masking
-        // applied on the public site (searchresults/staydetail use AltTitle too).
-        if (r.ListingStatus === 'LimitedListing' && r.AltTitle) {
-          r.Title = r.AltTitle;
-        }
-        delete r.AltTitle;
-        delete r.ListingStatus;
-        // Since the main query already filters for S.Listed = 1 and prices with sp.Listed = 1,
-        // we can trust that this stay has bookable inventory
+        applyBookingStatus(r);
+        // Prices are sp.Listed = 1 only; whether the Stay itself can be booked is in bookingStatus.
         // For budget searches, we prioritize getting results over strict availability checking
         const days = r.PriceDays ?? 0;
         const sourceCurrency = r.PriceCurrencyCode;
@@ -321,6 +313,9 @@ export async function getStaysByBudget(connStr: string, params: {
               PriceDays: r.PriceDays,
               MinPrice: r.MinPrice,
               PriceCurrencyCode: r.PriceCurrencyCode,
+              bookable: r.bookable,
+              bookingStatus: r.bookingStatus,
+              ...(r.bookingNote ? { bookingNote: r.bookingNote } : {}),
               requestedCurrency: targetCurrency,
               priceRange: `${Math.round(total)} ${targetCurrency}`
             };
@@ -355,6 +350,9 @@ export async function getStaysByBudget(connStr: string, params: {
             PriceDays: r.PriceDays,
             MinPrice: r.MinPrice,
             PriceCurrencyCode: r.PriceCurrencyCode,
+            bookable: r.bookable,
+            bookingStatus: r.bookingStatus,
+            ...(r.bookingNote ? { bookingNote: r.bookingNote } : {}),
             requestedCurrency: targetCurrency,
             priceRange: null
           };

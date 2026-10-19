@@ -1,4 +1,5 @@
 import sql from 'mssql';
+import { OPEN_ACCOUNT_STAY_FILTER, BOOKABLE_COLUMN, applyBookingStatus } from './stayVisibility.js';
 import type { Stay } from "../types/stay.js";
 
 function parseConnectionString(connStr: string) {
@@ -100,7 +101,7 @@ export async function getStayByID(connStr: string, id: string | number): Promise
 
     const query = `
       SELECT
-        S.EntryId, S.Title, S.AltTitle, S.ListingStatus,
+        S.EntryId, S.Title, S.AltTitle, S.ListingStatus, ${BOOKABLE_COLUMN},
         ISNULL(L.location_name,'MISSING') AS Region,
         S.City, CO.CountryName, S.CountryCode2Alpha, S.URL,
         S.GeoLat, S.GeoLng,
@@ -115,7 +116,7 @@ export async function getStayByID(connStr: string, id: string | number): Promise
       LEFT JOIN tbCountry CO ON S.Country = CO.CountryId
       LEFT JOIN Location L ON S.LocationID = L.location_id
       LEFT JOIN tbAdditionalInformationDetail PD ON PD.EntryID = S.PetsAllowed
-      WHERE S.IsDeleted != 'true' AND S.EntryId = @id
+      WHERE ${OPEN_ACCOUNT_STAY_FILTER} AND S.EntryId = @id
       ORDER BY S.Title
       `; 
 
@@ -123,14 +124,7 @@ export async function getStayByID(connStr: string, id: string | number): Promise
     let rec: any = (result.recordset as Stay[])[0];
     if (!rec) return null;
 
-    // Limited Listing rooms/stays are hidden from search and non-bookable —
-    // never expose the real business name via MCP for one, the same masking
-    // applied on the public site (searchresults/staydetail use AltTitle too).
-    if (rec.ListingStatus === 'LimitedListing' && rec.AltTitle) {
-      rec.Title = rec.AltTitle;
-    }
-    delete rec.AltTitle;
-    delete rec.ListingStatus;
+    applyBookingStatus(rec);
 
     if (rec.URL) {
       const u = String(rec.URL).trim();

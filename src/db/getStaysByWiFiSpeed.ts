@@ -1,4 +1,5 @@
 import sql from 'mssql';
+import { OPEN_ACCOUNT_STAY_FILTER, BOOKABLE_COLUMN, BOOKABLE_FIRST_ORDER, applyBookingStatus } from './stayVisibility.js';
 import type { Stay } from '../types/stay.js';
 
 export async function getStaysByWiFiSpeed(connStr: string, params: {
@@ -18,7 +19,7 @@ export async function getStaysByWiFiSpeed(connStr: string, params: {
     const query = `
       SELECT TOP (@limit)
         S.EntryId,
-        S.Title, S.AltTitle, S.ListingStatus,
+        S.Title, S.AltTitle, S.ListingStatus, ${BOOKABLE_COLUMN},
         S.City,
         S.State,
         S.PostCode,
@@ -38,22 +39,15 @@ export async function getStaysByWiFiSpeed(connStr: string, params: {
         S.WiFi_Upload_Speed AS WiFiUploadSpeed
       FROM tbStays S
       LEFT JOIN tbCountry CO ON S.Country = CO.CountryId
-      WHERE S.Listed = 1
+      WHERE ${OPEN_ACCOUNT_STAY_FILTER}
         AND (S.Suspended IS NULL OR S.Suspended = 0)
         AND S.WiFi_Download_Speed > @minSpeed
-      ORDER BY S.WiFi_Download_Speed DESC, S.Title
+      ORDER BY ${BOOKABLE_FIRST_ORDER}, S.WiFi_Download_Speed DESC, S.Title
     `;
     const result = await req.query(query);
     for (const rec of result.recordset as any[]) {
       if (!rec) continue;
-      // Limited Listing rooms/stays are hidden from search and non-bookable —
-      // never expose the real business name via MCP for one, the same masking
-      // applied on the public site (searchresults/staydetail use AltTitle too).
-      if (rec.ListingStatus === 'LimitedListing' && rec.AltTitle) {
-        rec.Title = rec.AltTitle;
-      }
-      delete rec.AltTitle;
-      delete rec.ListingStatus;
+      applyBookingStatus(rec);
     }
     return result.recordset as Stay[];
   } finally {

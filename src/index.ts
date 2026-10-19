@@ -1595,6 +1595,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "createStayEnquiry") {
+    const args = request.params.arguments ?? {};
+    const stayId = Number(args.stayId);
+    const message = args.message != null ? String(args.message) : "";
+    if (!Number.isInteger(stayId) || stayId <= 0) throw new Error("Tool 'createStayEnquiry' requires a numeric 'stayId'");
+    if (!message.trim()) throw new Error("Tool 'createStayEnquiry' requires a 'message'");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.createStayEnquiry({
+        stayId,
+        message,
+        arrivalDate: args.arrivalDate != null ? String(args.arrivalDate) : undefined,
+        nights: args.nights != null ? Number(args.nights) : undefined,
+      });
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: result
+      };
+    } catch (err: any) {
+      throw new Error(`createStayEnquiry failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   if (request.params.name === "getBookingStatus") {
     const pnr = request.params.arguments?.pnr ?? null;
     if (!pnr) throw new Error("Tool 'getBookingStatus' requires 'pnr' argument");
@@ -3223,6 +3246,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
         _meta: bookingWidgetMeta,
         annotations: { title: "Book a Stay", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+      },
+      {
+        name: "createStayEnquiry",
+        description: "Send an enquiry about a Stay that can't be booked right now — for example quoteStayBooking finds no bookable package, or the Stay page says it isn't bookable online. The enquiry goes to the Nomad Stays team, who check availability with the Stay and reply to the member by email (usually within one working day). The member's name and email come from their Nomad Stays account; do not ask for them. Only send an enquiry the member has asked for, and include what they told you (who is travelling, work needs, questions). Use bookStay instead whenever a quote succeeds. Requires the 'bookings' scope.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's ID (EntryId), as returned by the search tools or getStayByID" },
+            message: { type: "string", description: "The member's enquiry, up to 2000 characters" },
+            arrivalDate: { type: "string", description: "Preferred arrival date, YYYY-MM-DD (optional)" },
+            nights: { type: "number", description: "Number of nights, 1-365 (optional)" }
+          },
+          required: ["stayId", "message"]
+        },
+        annotations: { title: "Enquire About a Stay", readOnlyHint: false, destructiveHint: false, openWorldHint: true }
       },
       {
         name: "getBookingStatus",

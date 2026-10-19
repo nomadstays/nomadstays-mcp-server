@@ -1,4 +1,5 @@
 import sql from 'mssql';
+import { OPEN_ACCOUNT_STAY_FILTER, BOOKABLE_COLUMN, applyBookingStatus } from './stayVisibility.js';
 import type { Stay } from '../types/stay.js';
 
 function parseConnectionString(connStr: string) {
@@ -122,7 +123,7 @@ export async function getStaysByLifestyle(connStr: string, opts?: { lifestyle?: 
     
     const query = `
       SELECT DISTINCT TOP (@limit)
-        S.EntryId, S.Title, S.AltTitle, S.ListingStatus,
+        S.EntryId, S.Title, S.AltTitle, S.ListingStatus, ${BOOKABLE_COLUMN},
         S.City, S.CountryCode2Alpha, S.URL, CO.CountryName,
         ISNULL(L.location_name,'MISSING') AS Region,
         L.location_country,
@@ -153,12 +154,11 @@ export async function getStaysByLifestyle(connStr: string, opts?: { lifestyle?: 
         WHERE sp.Listed = 1 AND sp.Days = 7
         GROUP BY p.StayFK
       ) P ON P.StayFK = S.EntryId
-      WHERE S.IsDeleted != 'true' 
-        AND S.Listed = 1
+      WHERE ${OPEN_ACCOUNT_STAY_FILTER}
         AND G.GenreID IS NOT NULL
         ${whereLifestyle}
       ORDER BY 
-        WiFiSpeedNullSort,
+        Bookable DESC, WiFiSpeedNullSort,
         S.WiFi_Download_Speed DESC,
         MinPriceNullSort,
         P.MinSellPrice DESC
@@ -171,14 +171,7 @@ export async function getStaysByLifestyle(connStr: string, opts?: { lifestyle?: 
       // Skip undefined/null rows
       if (!r) continue;
 
-      // Limited Listing rooms/stays are hidden from search and non-bookable —
-      // never expose the real business name via MCP for one, the same masking
-      // applied on the public site (searchresults/staydetail use AltTitle too).
-      if (r.ListingStatus === 'LimitedListing' && r.AltTitle) {
-        r.Title = r.AltTitle;
-      }
-      delete r.AltTitle;
-      delete r.ListingStatus;
+      applyBookingStatus(r);
 
       if (r.URL) {
         const u = String(r.URL).trim();
