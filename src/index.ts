@@ -1634,6 +1634,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "getCancellationOptions") {
+    const pnr = request.params.arguments?.pnr ?? null;
+    if (!pnr) throw new Error("Tool 'getCancellationOptions' requires 'pnr' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getCancellationOptions(String(pnr));
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: result
+      };
+    } catch (err: any) {
+      throw new Error(`getCancellationOptions failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "cancelBooking") {
+    const args = request.params.arguments ?? {};
+    const pnr = args.pnr ?? null;
+    if (!pnr) throw new Error("Tool 'cancelBooking' requires 'pnr' argument");
+    if (args.confirm !== true) {
+      throw new Error("Tool 'cancelBooking' requires confirm: true. Call getCancellationOptions, show the member what cancelling means, and only call cancelBooking once they have explicitly agreed.");
+    }
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.cancelBooking(String(pnr), {
+        confirm: true,
+        reason: args.reason != null ? String(args.reason) : undefined,
+      });
+      return {
+        ...CompatibilityHelper.formatToolResponse(result),
+        structuredContent: result
+      };
+    } catch (err: any) {
+      throw new Error(`cancelBooking failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   if (request.params.name === "listMyBookings") {
     const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
     try {
@@ -3285,6 +3322,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
         _meta: listCardsWidgetMeta,
         annotations: { title: "List My Bookings", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+      },
+      {
+        name: "getCancellationOptions",
+        description: "Check whether one of the caller's own paid Stay bookings can still be cancelled under the Stay's cancellation policy, and what the member would get back. Returns state (open, request_only, expired, non_refundable, started, cancelled, request_pending), canCancel, cancellationType (refund, credit, request or none), deadlineUtc, message and onCancel (what cancelling would do). Always call this first and tell the member the message and onCancel text before offering cancelBooking. When state is expired, tell the member the cancellation period has expired; do not offer cancelBooking. Requires the 'bookings' scope.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            pnr: { type: "string", description: "The booking reference (PNR), as returned by bookStay or listMyBookings" }
+          },
+          required: ["pnr"]
+        },
+        annotations: { title: "Check Cancellation Options", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+      },
+      {
+        name: "cancelBooking",
+        description: "Cancel one of the caller's own paid Stay bookings under the Stay's cancellation policy. Only call this after getCancellationOptions returned canCancel: true, you have told the member its message and onCancel text, and the member has explicitly said they want to cancel; pass confirm: true. Cancelling can't be undone online. A refund or credit of the booking fee goes to the member's Nomad Stays wallet automatically. For a Custom policy (cancellationType 'request') this only sends a request to the Nomad Stays team and the Stay, and the booking stays active until they reply by email. The member, the Stay and the Nomad Stays team are emailed either way. Requires the 'bookings' scope.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            pnr: { type: "string", description: "The booking reference (PNR) to cancel" },
+            confirm: { type: "boolean", description: "Must be true, and only once the member has explicitly agreed to cancel" },
+            reason: { type: "string", description: "The member's reason for cancelling, if they gave one (optional, up to 1000 characters)" }
+          },
+          required: ["pnr", "confirm"]
+        },
+        annotations: { title: "Cancel a Booking", readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false }
       },
 
       {

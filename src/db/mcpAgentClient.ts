@@ -280,6 +280,13 @@ export const mcpAgentClient = {
   }) => call("POST", `/checkout`, body, "stayBooking"),
   getBookingStatus: (pnr: string) => call("GET", `/bookings/${encodeURIComponent(pnr)}/status`, undefined, "stayBooking"),
   listMyBookings: () => call("GET", `/bookings`, undefined, "stayBooking"),
+  // Cancellation follows the Stay's cancellation policy, decided entirely server-side (same rules,
+  // wallet credit and notifications as the site's /cancel-booking page). cancelBooking is refused
+  // unless confirm is true — the agent must show the options and get the member's explicit yes.
+  getCancellationOptions: (pnr: string) =>
+    call("GET", `/bookings/${encodeURIComponent(pnr)}/cancellation`, undefined, "stayBooking"),
+  cancelBooking: (pnr: string, body: { confirm: boolean; reason?: string }) =>
+    call("POST", `/bookings/${encodeURIComponent(pnr)}/cancel`, body, "stayBooking"),
   // For Stays that can't be booked right now: goes to the Nomad Stays team, who reply to the
   // member by email. The guest is always the signed-in member (the site ignores any other name/email).
   createStayEnquiry: (body: {

@@ -67,6 +67,8 @@ Stay, Experience, and Coworking applications each go through the same `list` / `
 | `bookStay` | Create a booking on the caller's own behalf; returns a `checkoutUrl` or resolves as confirmed |
 | `getBookingStatus` | Check whether a booking is confirmed, verified fresh against the payment provider |
 | `listMyBookings` | List the caller's own bookings, including `needsAction`/`checkoutUrl` for anything still pending |
+| `getCancellationOptions` | Whether the caller's own paid booking can still be cancelled under the Stay's policy, the deadline and what they'd get back |
+| `cancelBooking` | Cancel the caller's own paid booking (requires `confirm: true`); refund/credit to the member's wallet, Custom policy sends a request only |
 | `createStayEnquiry` | Enquire about a Stay that can't be booked right now; the Nomad Stays team replies to the member by email |
 
 ## Trusted Stay Partner management tools
