@@ -1036,6 +1036,66 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === "getStaySupplierConnection") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'getStaySupplierConnection' requires 'stayId' argument");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.getSupplierConnection(String(stayId));
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`getStaySupplierConnection failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "updateStaySupplierConnection") {
+    const args = (request.params.arguments ?? {}) as Record<string, unknown>;
+    const stayId = args.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'updateStaySupplierConnection' requires 'stayId' argument");
+    const body: Record<string, unknown> = {};
+    if (args.mcpServerUrl !== undefined) body.mcpServerUrl = String(args.mcpServerUrl ?? "");
+    if (args.mcpApiKey !== undefined) body.mcpApiKey = String(args.mcpApiKey ?? "");
+    if (args.pricesByDay !== undefined) body.pricesByDay = args.pricesByDay === true;
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      await mcpAgentClient.patchSupplierConnection(String(stayId), body);
+      return CompatibilityHelper.formatToolResponse({ updated: true, stayId, fields: Object.keys(body) });
+    } catch (err: any) {
+      throw new Error(`updateStaySupplierConnection failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "listMyStayBookings") {
+    const stayId = request.params.arguments?.stayId ?? null;
+    if (!stayId) throw new Error("Tool 'listMyStayBookings' requires 'stayId' argument");
+    const from = request.params.arguments?.from;
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.listStayBookings(String(stayId), from ? String(from) : undefined);
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`listMyStayBookings failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "confirmStayBooking") {
+    const args = request.params.arguments ?? {};
+    const pnr = args.pnr ?? null;
+    if (!pnr) throw new Error("Tool 'confirmStayBooking' requires 'pnr' argument");
+    if (typeof args.confirmed !== "boolean") throw new Error("Tool 'confirmStayBooking' requires 'confirmed' (true or false)");
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.confirmStayBooking(String(pnr), {
+        confirmed: args.confirmed,
+        supplierReference: args.supplierReference != null ? String(args.supplierReference) : undefined,
+        reason: args.reason != null ? String(args.reason) : undefined,
+      });
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`confirmStayBooking failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
   if (request.params.name === "deleteStayRoom") {
     const stayId = request.params.arguments?.stayId ?? null;
     const roomId = request.params.arguments?.roomId ?? null;
@@ -2586,6 +2646,61 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["stayId", "roomId"]
         },
         annotations: { title: "Update a Room", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+      },
+      {
+        name: "getStaySupplierConnection",
+        description: "For Stay Partners whose own system holds availability and bookings (a connected supplier): show a Stay's connection to the partner's MCP server — the server URL, whether an API key is set (never the key itself), whether the Stay is priced by the day, the last sync time and error, and each room's mcpRoomId. Nomad Stays calls the partner's get_allocation, check_availability, create_booking and cancel_booking tools. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" }
+          },
+          required: ["stayId"]
+        },
+        annotations: { title: "Get Supplier Connection", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+      },
+      {
+        name: "updateStaySupplierConnection",
+        description: "Connect a Stay to the partner's own MCP server, change the connection, or disconnect it (empty mcpServerUrl). The server must implement get_allocation, check_availability, create_booking and cancel_booking (Nomad Stays connected supplier spec) and be public https. Set each room's mcpRoomId with updateStayRoom. Only fields supplied are changed. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            mcpServerUrl: { type: "string", description: "https URL of the partner's MCP server; empty string disconnects" },
+            mcpApiKey: { type: "string", description: "Bearer token Nomad Stays sends to the partner's MCP server; empty string clears it. Never returned" },
+            pricesByDay: { type: "boolean", description: "True if the partner prices by the day: its 1-month package price is for 31 nights, and a month booking is charged that price ÷ 31 for each actual night" }
+          },
+          required: ["stayId"]
+        },
+        annotations: { title: "Update Supplier Connection", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+      },
+      {
+        name: "listMyStayBookings",
+        description: "List the bookings on one of your Stays (from 30 days ago by default), with dates, rooms, guests, your price and the supplier status (pending_push, pending, confirmed, refused, cancelled…) and your supplier reference, so your system can reconcile with Nomad Stays. Never shows the booking fee the client paid Nomad Stays. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            stayId: { type: "number", description: "The Stay's EntryID" },
+            from: { type: "string", description: "Only bookings checking out on or after this date (yyyy-MM-dd). Default: 30 days ago" }
+          },
+          required: ["stayId"]
+        },
+        annotations: { title: "List Bookings on My Stay", readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+      },
+      {
+        name: "confirmStayBooking",
+        description: "As a connected supplier, confirm a booking on one of your Stays that your system accepted as pending (confirmed: true with your supplierReference), or refuse it (confirmed: false with a reason). Confirm within 30 minutes of the booking or the Nomad Stays team is alerted. A refusal is a refused booking under the Stay Partner terms: the room is taken off sale automatically and the client must be relocated to an equal or better room. Requires an MCP agent token scoped to the owning account.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            pnr: { type: "string", description: "The Nomad Stays booking reference (booking_reference in create_booking)" },
+            confirmed: { type: "boolean", description: "true to confirm, false to refuse" },
+            supplierReference: { type: "string", description: "Your booking reference (required when confirming)" },
+            reason: { type: "string", description: "Why the booking is refused (required when refusing)" }
+          },
+          required: ["pnr", "confirmed"]
+        },
+        annotations: { title: "Confirm or Refuse a Booking", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false }
       },
       {
         name: "deleteStayRoom",

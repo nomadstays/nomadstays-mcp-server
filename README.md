@@ -80,6 +80,9 @@ The tools above are read-only and public (aside from applications, which are sel
 | `getMyStays` / `getMyStayDetail` / `updateStayDetail` | Read/update a Stay's core details (title, description, address, policies) |
 | `getMyStayOnboardingStatus` | The six "Listing Completion" scores from the Stay dashboard (Stay Details, Availability, Rooms, Packages, Wi-Fi, Operator Information) plus an overall percentage — Wi-Fi is a test-freshness score, not a speed rating |
 | `getMyStayRooms` / `createStayRoom` / `updateStayRoom` / `deleteStayRoom` | Full room CRUD, including bed sizes, facilities, and photos |
+| `getStaySupplierConnection` / `updateStaySupplierConnection` | Connect a Stay to the partner's own MCP server (connected supplier): URL, API key, priced by the day |
+| `listMyStayBookings` | Bookings on one of your Stays with their supplier status, for reconciling with your own system |
+| `confirmStayBooking` | Confirm a pending booking with your reference, or refuse it with a reason |
 | `getRoomTypeOptions` / `getRoomFacilityOptions` | Reference lookups for valid room types/facilities (differ for boutique vs standard Stays) |
 | `uploadStayPhoto` / `getMyStayPhotos` / `deleteStayPhoto` / `reorderStayPhotos` | Stay-level photo management, including reordering |
 | `deleteRoomPhoto` / `reorderRoomPhotos` | Room-level photo management |

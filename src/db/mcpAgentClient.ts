@@ -182,6 +182,19 @@ export const mcpAgentClient = {
   reorderStayPhotos: (stayId: string | number, area: string, body: unknown) =>
     call("PATCH", `/stays/${stayId}/photos/${encodeURIComponent(area)}/order`, body),
 
+  // ── Connected suppliers (Controllers/McpSupplierApiController.cs) ────────
+  // For Stay Partners whose own system (an MCP server) holds the availability and bookings.
+  // Nomad Stays calls the partner's get_allocation / check_availability / create_booking /
+  // cancel_booking tools (docs/CONNECTED_SUPPLIER_MCP_SPEC.md in nomadstayscom26); these let the
+  // partner set up the connection, reconcile bookings and confirm or refuse a pending booking.
+  getSupplierConnection: (stayId: string | number) => call("GET", `/stays/${stayId}/supplier-connection`),
+  patchSupplierConnection: (stayId: string | number, body: unknown) =>
+    call("PATCH", `/stays/${stayId}/supplier-connection`, body),
+  listStayBookings: (stayId: string | number, from?: string) =>
+    call("GET", `/stays/${stayId}/bookings${from ? `?from=${encodeURIComponent(from)}` : ""}`),
+  confirmStayBooking: (pnr: string, body: { confirmed: boolean; supplierReference?: string; reason?: string }) =>
+    call("POST", `/bookings/${encodeURIComponent(pnr)}/supplier-confirmation`, body),
+
   deleteRoom: (stayId: string | number, roomId: string | number) =>
     call("DELETE", `/stays/${stayId}/rooms/${roomId}`),
   getRoomTypesForStay: (stayId: string | number) => call("GET", `/stays/${stayId}/reference/room-types`),

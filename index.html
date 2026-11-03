@@ -644,6 +644,26 @@
                             <td>stayId, roomId</td>
                         </tr>
                         <tr>
+                            <td><code>getStaySupplierConnection</code></td>
+                            <td>Show a Stay's connection to the partner's own MCP server (connected supplier): URL, whether a key is set, priced by the day, last sync, room ids</td>
+                            <td>stayId</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateStaySupplierConnection</code></td>
+                            <td>Connect, change or disconnect a Stay's supplier MCP server</td>
+                            <td>stayId, mcpServerUrl, mcpApiKey, pricesByDay</td>
+                        </tr>
+                        <tr>
+                            <td><code>listMyStayBookings</code></td>
+                            <td>Bookings on one of your Stays with their supplier status and your reference, for reconciliation</td>
+                            <td>stayId, from</td>
+                        </tr>
+                        <tr>
+                            <td><code>confirmStayBooking</code></td>
+                            <td>Confirm a pending booking with your reference, or refuse it with a reason</td>
+                            <td>pnr, confirmed, supplierReference, reason</td>
+                        </tr>
+                        <tr>
                             <td><code>createStayPackage</code></td>
                             <td>Create a new pricing package on a Stay, optionally with initial price tiers</td>
                             <td>stayId, packageName, prices (optional array), and more</td>
