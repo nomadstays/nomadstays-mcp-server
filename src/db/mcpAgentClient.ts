@@ -133,6 +133,14 @@ export const mcpAgentClient = {
     acceptGdpr: boolean;
   }) => callAnonymous("POST", `/api/agent-signup`, body),
 
+  // "Email me this shortlist": anonymous like signUp. The site looks up prices/titles itself and
+  // answers identically whether or not it sent (see AgentShortlistApiController).
+  emailShortlist: (body: {
+    email: string;
+    stayIds: number[];
+    userConsented: boolean;
+  }) => callAnonymous("POST", `/api/agent-shortlist`, { ...body, agentName: "mcp" }),
+
   getMyStays: () => call("GET", `/stays`),
   getStayDetail: (stayId: string | number) => call("GET", `/stays/${stayId}`),
   patchStayDetail: (stayId: string | number, body: unknown) => call("PATCH", `/stays/${stayId}`, body),

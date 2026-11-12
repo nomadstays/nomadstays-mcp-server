@@ -204,7 +204,26 @@ function createServer(): Server {
 
 // Register the "getStaysByCountry" and "getStaysByContinent" tools using setRequestHandler for CallToolRequestSchema
 const callToolHandler = async (request: CallToolRequest) => {
-    if (request.params.name === "getStaysByWiFiSpeed") {
+    if (request.params.name === "emailMeShortlist") {
+    const args = request.params.arguments ?? {};
+    if (!args.email) throw new Error("Tool 'emailMeShortlist' requires 'email' argument");
+    if (!Array.isArray(args.stayIds) || args.stayIds.length === 0) throw new Error("Tool 'emailMeShortlist' requires a non-empty 'stayIds' array");
+    if (args.userConsented !== true) throw new Error("Tool 'emailMeShortlist' requires 'userConsented' to be true: only send it after the person asked for the email");
+
+    const { mcpAgentClient } = await import('./db/mcpAgentClient.js');
+    try {
+      const result = await mcpAgentClient.emailShortlist({
+        email: String(args.email),
+        stayIds: args.stayIds.map((n: unknown) => Number(n)).filter((n: number) => Number.isFinite(n)),
+        userConsented: true,
+      });
+      return CompatibilityHelper.formatToolResponse(result);
+    } catch (err: any) {
+      throw new Error(`emailMeShortlist failed: ${err?.message ?? String(err)}`);
+    }
+  }
+
+  if (request.params.name === "getStaysByWiFiSpeed") {
       const minWiFiDownloadSpeed = Number(request.params.arguments?.minWiFiDownloadSpeed) || 10;
       const limit = Number(request.params.arguments?.limit) || 15;
       const connStrRaw = process.env.NOMADSTAYS_DB_CONNECTION ?? '';
@@ -2093,6 +2112,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["firstName", "lastName", "email", "telephone", "password", "acceptGdpr"]
         },
         annotations: { title: "Sign Up for a Nomad Stays Account", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+      },
+
+      {
+        name: "emailMeShortlist",
+        description: "Emails the person a one-off shortlist of up to 5 stays they have been looking at, with member prices, and a link to create a free account. Members save around 5% - create an account today while it's free. Use it when the person has no account yet and would like to keep or come back to these stays, or says they'll decide later. ONLY call it after the person has asked for the email to be sent to them and given you their address; set userConsented to true to confirm that. It sends one email per address (repeat requests are ignored), never marketing, and carries an opt-out link. Prices and links are looked up by Nomad Stays, not taken from you. The reply is always the same whether or not an email is sent.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            email: { type: "string", description: "The person's own email address, given to you by them for this purpose" },
+            stayIds: { type: "array", items: { type: "number" }, minItems: 1, maxItems: 5, description: "Stay ids (EntryId from the stay search tools) for the stays to include, best match first. Maximum 5." },
+            userConsented: { type: "boolean", description: "Set to true only if the person explicitly asked for this shortlist to be emailed to this address." }
+          },
+          required: ["email", "stayIds", "userConsented"]
+        },
+        annotations: { title: "Email Me This Shortlist", readOnlyHint: false, destructiveHint: false, openWorldHint: false }
       },
       {
         name: "getStaysByCountry",

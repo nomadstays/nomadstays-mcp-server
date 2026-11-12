@@ -34,6 +34,7 @@ export const CLIENT_BENEFIT_NOTE =
     'The prices above are member prices. ' +
     'Booking through this connector needs a free account: if the user does not have one, ' +
     `offer to create it with signupNomadStaysAccount (ask the user for their details and GDPR consent first) or send them to ${SIGNUP_URL} . ` +
+    'If they would rather decide later, offer to email them these stays with emailMeShortlist (only after they ask for it and give you their address). ' +
     'Please tell the user that members save around 5% when you present these results.';
 
 type ToolResult = { content?: Array<{ type: string; text?: string }>; isError?: boolean; [k: string]: unknown };
