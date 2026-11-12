@@ -70,6 +70,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { 
   CallToolRequestSchema,
+  type CallToolRequest,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
   ListToolsRequestSchema,
@@ -83,6 +84,7 @@ import { createTrackingMiddleware } from "./tracking/middleware.js";
 import { createStatsEndpoints } from "./tracking/statsEndpoints.js";
 import { runWithRequestAgentToken } from "./tracking/requestTokenContext.js";
 import { requestCallsProtectedTool } from "./auth/protectedTools.js";
+import { withClientBenefit } from "./clientBenefit.js";
 import { isTokenAcceptable, RESOURCE_URI } from "./auth/introspect.js";
 import { mcpEndpointLimiter, isSignupRateLimited, requestCallsSignup } from "./auth/rateLimit.js";
 import {
@@ -201,7 +203,7 @@ function createServer(): Server {
 );
 
 // Register the "getStaysByCountry" and "getStaysByContinent" tools using setRequestHandler for CallToolRequestSchema
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+const callToolHandler = async (request: CallToolRequest) => {
     if (request.params.name === "getStaysByWiFiSpeed") {
       const minWiFiDownloadSpeed = Number(request.params.arguments?.minWiFiDownloadSpeed) || 10;
       const limit = Number(request.params.arguments?.limit) || 15;
@@ -1815,7 +1817,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   throw new Error("Unknown tool");
-});
+};
+
+// Append the "free account = 5% saving" note to price-carrying tool results (see clientBenefit.ts).
+server.setRequestHandler(CallToolRequestSchema, async (request) =>
+  withClientBenefit(request.params.name, (await callToolHandler(request)) as any));
 
 /**
  * Handler for listing available stays as resources.
