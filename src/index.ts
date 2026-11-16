@@ -2542,7 +2542,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
       {
         name: "getMyStays",
-        description: "List all Stays owned by the account bound to the MCP agent token. Returns stayId, title, and listed status for each — use this to find a stayId before calling any other owner-scoped tool. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        description: "List all Stays owned by the account bound to the MCP agent token. Returns stayId, title, listed and status for each — use this to find a stayId before calling any other owner-scoped tool. status is 'Live', 'Paused' or 'Closed'. Paused: the partner has hidden the Stay and it can't be booked, but it can still be edited and the partner can resume it. Closed: the partner has permanently taken the Stay off Nomad Stays, so it is read-only — every write tool for it fails with a 409 error and no further work should be done on it; tell the partner to contact Nomad Stays if it was closed by mistake. Partners pause or close a Stay themselves in their Stay dashboard (not through this connector). Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: {
           type: "object",
           properties: {},
@@ -2553,7 +2553,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "getMyStayDetail",
-        description: "Get the current title, description, and listed status for one of your Stays. Call this before updateStayDetail so the agent knows the current values and doesn't accidentally overwrite them. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
+        description: "Get the current title, description, listed flag and status ('Live', 'Paused' or 'Closed') for one of your Stays. A Closed Stay is read-only and cannot be edited. Call this before updateStayDetail so the agent knows the current values and doesn't accidentally overwrite them. Requires NOMADSTAYS_MCP_AGENT_TOKEN.",
         inputSchema: {
           type: "object",
           properties: {
@@ -2624,7 +2624,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
       {
         name: "updateStayDetail",
-        description: "Update a Stay's title and/or description. Requires an MCP agent token (NOMADSTAYS_MCP_AGENT_TOKEN) scoped to the owning account. Only fields supplied are changed.",
+        description: "Update a Stay's title and/or description. Requires an MCP agent token (NOMADSTAYS_MCP_AGENT_TOKEN) scoped to the owning account. Only fields supplied are changed. Fails with a 409 if the Stay is Closed (check status with getMyStays first); the same applies to every other tool that edits a Stay, its rooms, packages, photos, contacts, facilities or supplier connection.",
         inputSchema: {
           type: "object",
           properties: {

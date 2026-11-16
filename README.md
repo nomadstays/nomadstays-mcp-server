@@ -77,7 +77,7 @@ The tools above are read-only and public (aside from applications, which are sel
 
 | Tool | Description |
 |---|---|
-| `getMyStays` / `getMyStayDetail` / `updateStayDetail` | Read/update a Stay's core details (title, description, address, policies) |
+| `getMyStays` / `getMyStayDetail` / `updateStayDetail` | Read/update a Stay's core details (title, description, address, policies). Each Stay has a `status` of Live, Paused or Closed; a Closed Stay is read-only and edits fail with a 409 |
 | `getMyStayOnboardingStatus` | The six "Listing Completion" scores from the Stay dashboard (Stay Details, Availability, Rooms, Packages, Wi-Fi, Operator Information) plus an overall percentage — Wi-Fi is a test-freshness score, not a speed rating |
 | `getMyStayRooms` / `createStayRoom` / `updateStayRoom` / `deleteStayRoom` | Full room CRUD, including bed sizes, facilities, and photos |
 | `getStaySupplierConnection` / `updateStaySupplierConnection` | Connect a Stay to the partner's own MCP server (connected supplier): URL, API key, priced by the day |
