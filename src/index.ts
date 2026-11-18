@@ -2924,7 +2924,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             parkingId: { type: "string", description: "An optionId from getAdditionalInformationOptions(filterName='Parking') — NOT a boolean." },
             cxPolicyId: { type: "string", description: "A cxPolicyId from getCancellationPolicyOptions." },
             customCxPolicyLink: { type: "string" },
-            tourismNumber: { type: "string" },
+            tourismNumber: { type: "string", description: "Official Tourism / Lodging registration number. REQUIRED (not blank, not N/A) when the Stay country's tourismNumberRequired flag is true in getCountryOptions, for every business model including StayDirect; the update is rejected otherwise. When changing countryId to such a country, send tourismNumber in the same call." },
             landRegistrationNumber: { type: "string" },
             registeredBusiness: { type: "boolean", description: "Whether the Stay is officially registered for tourism/lodging" },
             stayTypeId: { type: "number", description: "A stayTypeId from getStayTypeOptions." },
